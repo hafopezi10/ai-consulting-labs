@@ -25,7 +25,7 @@ A **probability** is a number between 0 and 1:
 Two rules cover almost everything:
 
 - **The probabilities of all outcomes add up to 1.** A coin is heads `0.5` + tails `0.5` = `1`.
-- **For events that cannot happen together, add to get "either one":** `P(A or B) = P(A) + P(B)`. Rolling a 1 or a 2 on a die is `1/6 + 1/6 = 1/3`.
+- **For events that cannot happen together (mutually exclusive), add to get "either one":** `P(A or B) = P(A) + P(B)`. Rolling a 1 or a 2 on a die is `1/6 + 1/6 = 1/3`. (If the events CAN overlap, you must subtract the double-count: `P(A or B) = P(A) + P(B) - P(A and B)` - see: NIST e-Handbook.)
 
 ```python
 import numpy as np
@@ -56,7 +56,7 @@ The formula:
 P(A | B) = P(A and B) / P(B)
 ```
 
-In words: out of all the times B happened, what fraction also had A?
+In words: out of all the times B happened, what fraction also had A? (see: NIST e-Handbook, conditional probability). This requires `P(B) > 0`.
 
 ---
 
@@ -67,6 +67,8 @@ Bayes theorem lets you flip a conditional probability around. It is the engine b
 ```
 P(A | B) = P(B | A) * P(A) / P(B)
 ```
+
+(see: Wolfram MathWorld, Bayes' Theorem). The denominator `P(B)` is the total probability of B, which you expand over all cases: `P(B) = P(B | A) * P(A) + P(B | not A) * P(not A)`. That expansion is exactly the `p_pos` line in the code below.
 
 The classic example everyone gets wrong. A disease affects 1% of people. A test is 99% accurate. You test positive. What is the chance you actually have the disease? Most people say 99%. The real answer is about 50%, because the disease is rare and false positives pile up.
 
@@ -144,7 +146,7 @@ Expected output (yours will differ):
 
 ### Binomial distribution
 
-Count the successes over `n` independent yes/no trials. "Out of 100 visitors, how many click?" is binomial. Bernoulli is just binomial with `n = 1`.
+Count the successes over `n` independent yes/no trials. "Out of 100 visitors, how many click?" is binomial. Bernoulli is just binomial with `n = 1`, which is why both snippets use `np.random.binomial` and only change `n` (see: NIST e-Handbook, binomial distribution; numpy.random.binomial docs).
 
 ```python
 successes = np.random.binomial(n=100, p=0.3, size=5)  # 5 experiments of 100 visitors
@@ -189,6 +191,8 @@ These measure **spread**: how far values typically fall from the mean.
 - **Variance** is the average of the squared differences from the mean. Squaring keeps everything positive and punishes big deviations.
 - **Standard deviation** is the square root of the variance, back in the original units (dollars, seconds), which makes it easier to interpret.
 
+One thing to know before you trust the number: `np.var` and `np.std` default to `ddof=0`, which divides by N (the population formula - see: numpy.var docs). When your data is a sample and you want to estimate the population's spread, pass `ddof=1` to divide by N-1 (Bessel's correction). The example below uses the default N, so it reports the population variance of these five values.
+
 ```python
 data = np.array([10, 12, 14, 16, 18])
 print("mean:", data.mean())
@@ -218,3 +222,15 @@ Two datasets can have the same mean but wildly different spread. A model's predi
 - Expected value = long-run average; variance and standard deviation = spread = uncertainty.
 
 Next: **Concepts 2.4 - Statistics**, where we go from "what could happen" to "what does the data actually say".
+
+---
+
+## References
+
+- Wolfram MathWorld, Bayes' Theorem: https://mathworld.wolfram.com/BayesTheorem.html
+- NIST/SEMATECH e-Handbook, what is a probability / conditional probability: https://www.itl.nist.gov/div898/handbook/apr/section1/apr131.htm
+- NIST/SEMATECH e-Handbook, normal distribution: https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm
+- NIST/SEMATECH e-Handbook, binomial distribution: https://www.itl.nist.gov/div898/handbook/eda/section3/eda366i.htm
+- numpy.random.normal: https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
+- numpy.random.binomial: https://numpy.org/doc/stable/reference/random/generated/numpy.random.binomial.html
+- numpy.var / numpy.std (`ddof` default 0 = population): https://numpy.org/doc/stable/reference/generated/numpy.var.html

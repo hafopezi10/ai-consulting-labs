@@ -35,7 +35,7 @@ git commit -m "feat: add /summary endpoint"   # save a snapshot
 git log --oneline          # see history
 ```
 
-**Commit messages matter.** Use a convention like `feat:` (new feature), `fix:` (bug fix), `docs:`, `refactor:`, `test:`, `chore:`. A future you reading `git log` should understand what happened without opening the diff.
+**Commit messages matter.** Use a convention like `feat:` (new feature), `fix:` (bug fix), `docs:`, `refactor:`, `test:`, `chore:`. This is the Conventional Commits spec (see: conventionalcommits.org), and a `feat:`/`fix:` prefix can drive automated version bumps. A future you reading `git log` should understand what happened without opening the diff.
 
 ---
 
@@ -120,7 +120,7 @@ Never `pip install` into the system Python. Always activate a venv first. When y
 
 ## 9. Configuration management
 
-**Configuration** is everything that changes between environments (dev, staging, production) without changing the code: database host, port, log level, feature flags. The principle (from the "Twelve-Factor App"): **config lives outside the code**.
+**Configuration** is everything that changes between environments (dev, staging, production) without changing the code: database host, port, log level, feature flags. The principle (from the Twelve-Factor App methodology, factor III - "store config in the environment"; see: 12factor.net): **config lives outside the code**.
 
 Hardcoding `DB_HOST = "prod-db.internal"` in `app.py` means you must edit and redeploy code to point at a different database. Reading it from the environment means the same image runs anywhere - you just change the environment. That is why `app.py` does `DB_HOST = os.environ.get("DB_HOST", "127.0.0.1")`: environment first, safe local default second.
 
@@ -212,3 +212,15 @@ Good docs are concise and current. Stale docs are worse than none, because they 
 - **documentation / README / docstring** - how the next person uses your code.
 
 Next: [03-sql-for-ai-and-analytics.md](03-sql-for-ai-and-analytics.md) - the SQL that prepares data for models and analytics.
+
+---
+
+## References
+
+- Git reference documentation: https://git-scm.com/docs
+- Conventional Commits specification: https://www.conventionalcommits.org/
+- The Twelve-Factor App, Factor III - Config (store config in the environment): https://12factor.net/config
+- Python venv documentation: https://docs.python.org/3/library/venv.html
+- pip user guide (requirements files, pinning): https://pip.pypa.io/en/stable/user_guide/
+- Python Logging HOWTO: https://docs.python.org/3/howto/logging.html
+- FastAPI documentation (auto-generated `/docs`): https://fastapi.tiangolo.com/

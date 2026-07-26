@@ -20,9 +20,9 @@ is_primary = True     # a boolean (bool): True or False
 The four core scalar types:
 
 - **str** - text. Written in single or double quotes. `"cannot log in"`.
-- **int** - whole numbers, any size. `10`, `-3`, `999999999`.
-- **float** - numbers with a decimal point. `0.34`, `3.14`. Beware: floats are approximate, so never use them for money - use integers of cents or the `decimal` module.
-- **bool** - `True` or `False`. Comes from comparisons: `port == 5432` gives `True`.
+- **int** - whole numbers, any size. `10`, `-3`, `999999999`. Python integers have unlimited precision - no 32/64-bit overflow like C or Java (see: Python docs, Numeric Types).
+- **float** - numbers with a decimal point. `0.34`, `3.14`. Beware: floats are approximate (IEEE 754 double precision), so never use them for money - use integers of cents or the `decimal` module.
+- **bool** - `True` or `False`. Comes from comparisons: `port == 5432` gives `True`. Note `bool` is technically a subclass of `int`, so `True == 1` and `False == 0` (see: Python docs, Numeric Types).
 
 Check a type with `type(x)`. Convert with `int("10")`, `str(10)`, `float("0.75")`. A conversion that cannot work raises an error (`int("abc")` fails) - that is a feature, not a bug, because it stops bad data early.
 
@@ -86,7 +86,7 @@ else:
 - `if` / `elif` / `else` - test conditions top to bottom, run the first that is true.
 - Comparisons: `==` equal, `!=` not equal, `<`, `>`, `<=`, `>=`.
 - Combine with `and`, `or`, `not`.
-- **Truthiness**: empty things are false. `""`, `[]`, `{}`, `0`, and `None` are all "falsy". That is why `if not subject:` cleanly skips blank subjects - you do not have to write `if subject == "" or subject is None`.
+- **Truthiness**: empty things are false. `""`, `[]`, `{}`, `()`, `set()`, `0`, `0.0`, `None`, and `False` are all "falsy" (see: Python docs, Truth Value Testing). That is why `if not subject:` cleanly skips blank subjects - you do not have to write `if subject == "" or subject is None`.
 
 `None` is Python's "no value" (like SQL `NULL`). Test it with `is None` / `is not None`, never `== None`.
 
@@ -135,7 +135,7 @@ def categorize(subject, body):
 - `def` starts a function; the name is how you call it.
 - Parameters (`subject`, `body`) are inputs; `return` sends a value back.
 - A function with no `return` gives back `None`.
-- **Default arguments**: `def connect(host, port=5432)` - callers can omit `port`.
+- **Default arguments**: `def connect(host, port=5432)` - callers can omit `port`. Watch out: a default value is evaluated once, at definition time, so a mutable default like `def f(x=[])` is shared across calls - use `x=None` then set it inside instead (see: Python docs, Function definitions).
 - **Keyword arguments**: call as `connect(host="x", port=5433)` for clarity.
 
 `categorize()` is pure - same inputs always give the same output, no database, no network. Pure functions are trivial to test, which is why `test_app.py` tests it without a running database.
@@ -235,7 +235,7 @@ def categorize(subject: str, body: str | None) -> str:
 ```
 
 - `subject: str` - subject should be a string.
-- `body: str | None` - body is a string or `None` (`|` means "or", Python 3.10+).
+- `body: str | None` - body is a string or `None` (the `X | Y` union syntax means "or", added in Python 3.10 by PEP 604; before that you wrote `Optional[str]` or `Union[str, None]`).
 - `-> str` - the function returns a string.
 
 Type hints are non-negotiable in professional code and in this program. They turn "what does this function take again?" into something you can read in one line, and they let `mypy` flag `categorize(123)` before it ever ships.
@@ -257,8 +257,8 @@ log.warning("skipped blank subject on row %s", row_id)
 log.error("database unreachable: %s", exc)
 ```
 
-- Levels, quietest to loudest: `DEBUG < INFO < WARNING < ERROR < CRITICAL`. Set `level=` to the lowest you want to see.
-- Use `%s`/`%d` placeholders with arguments, not f-strings, in log calls - the string is only built if the level is actually emitted.
+- Levels, quietest to loudest: `DEBUG` (10) `< INFO` (20) `< WARNING` (30) `< ERROR` (40) `< CRITICAL` (50). Set `level=` to the lowest you want to see (see: Python Logging HOWTO).
+- Use `%s`/`%d` placeholders with arguments, not f-strings, in log calls - the logging module defers formatting until the message is actually emitted, so the string work is skipped if the level is filtered out (see: Python Logging HOWTO).
 - **Never log secrets** (passwords, API keys, tokens). A leaked key in a log file is the exact failure you fix in the `committed-secret` SURVIVE scenario.
 
 `print()` is fine for a quick script. Logging is what you ship, because you can route it, level it, and search it.
@@ -305,3 +305,13 @@ def test_unknown_is_uncategorized():
 - **unit test / assert / pytest** - automated correctness checks.
 
 Next: [02-software-engineering-basics.md](02-software-engineering-basics.md) - how professionals ship this code safely.
+
+---
+
+## References
+
+- Python docs, Built-in Types (Numeric Types, Truth Value Testing): https://docs.python.org/3/library/stdtypes.html
+- Python docs, Compound statements (function definitions, default and keyword arguments): https://docs.python.org/3/reference/compound_stmts.html
+- Python Logging HOWTO (levels, deferred `%`-style formatting): https://docs.python.org/3/howto/logging.html
+- PEP 604, Allow writing union types as `X | Y` (Python 3.10): https://peps.python.org/pep-0604/
+- pytest documentation: https://docs.pytest.org/en/stable/

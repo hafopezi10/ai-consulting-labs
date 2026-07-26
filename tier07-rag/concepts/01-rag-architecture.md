@@ -85,3 +85,14 @@ Most of your value as a consultant is knowing the failure modes before they happ
 The point of this stack: the entire pipeline runs on one modest Linux box, offline, for free, and every piece maps to a real production choice. That is exactly what makes it a credible consulting demo.
 
 Next: [02-embeddings.md](02-embeddings.md).
+
+---
+
+## References
+
+Authoritative sources for the concepts in this document. Model names, versions, and prices change - reconfirm current details before quoting them to a client.
+
+- Retrieval-Augmented Generation, original paper (Lewis et al., 2020): https://arxiv.org/abs/2005.11401
+- pgvector (vector storage and similarity search in PostgreSQL): https://github.com/pgvector/pgvector
+- Anthropic API / Claude docs (the generation model in this stack): https://docs.anthropic.com/ (model IDs and pricing change - always use the current values from the docs)
+- sentence-transformers (the small CPU embedding model option): https://sbert.net/

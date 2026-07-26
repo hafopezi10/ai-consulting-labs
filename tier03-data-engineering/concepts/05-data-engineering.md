@@ -126,8 +126,8 @@ print(pseudonymize("alice@example.com"))   # same input -> same token, so joins 
 Expected output (yours will differ if you change the salt):
 
 ```
-d1e9f2a7c3b48065
-d1e9f2a7c3b48065
+85ba3da1ede53b42
+85ba3da1ede53b42
 ```
 
 Same email hashes to the same token every time, so you can still group and join by user, but you cannot recover the email. The salt keeps guessable inputs (emails, phone numbers) from being brute-forced against a rainbow table.
@@ -149,3 +149,18 @@ As a consultant you must ask, early: where does this data legally have to live, 
 - Lineage, contracts, and observability are what let you trust an AI system in production and prove its behavior to an auditor.
 
 Analysis makes you useful once. Data engineering makes you useful every night, at scale, which is what companies actually pay for. Project 3 builds one end to end.
+
+---
+
+## References
+
+- ETL vs ELT overview (AWS) - https://aws.amazon.com/compare/the-difference-between-etl-and-elt/
+- Data lakehouse (Databricks) - https://www.databricks.com/glossary/data-lakehouse
+- Delta Lake - https://delta.io/ and Apache Iceberg - https://iceberg.apache.org/
+- Change data capture with Debezium - https://debezium.io/documentation/reference/stable/tutorial.html
+- Apache Airflow (DAGs, orchestration) - https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html
+- Data catalogs: DataHub - https://datahubproject.io/ , Amundsen - https://www.amundsen.io/ , AWS Glue Data Catalog - https://docs.aws.amazon.com/glue/latest/dg/catalog-and-crawler.html , Databricks Unity Catalog - https://docs.databricks.com/data-governance/unity-catalog/index.html
+- Python `hashlib` (SHA-256) - https://docs.python.org/3/library/hashlib.html
+- GDPR pseudonymization vs anonymization guidance (EDPB/ICO) - https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/anonymisation/
+
+Note: the SHA-256 example truncates to 16 hex characters for readability; a real pipeline typically keeps the full 64-character digest to minimize collision risk. The salt shown is a placeholder and must be kept secret and outside version control in production.

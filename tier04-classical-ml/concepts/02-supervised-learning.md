@@ -56,6 +56,8 @@ Despite the name, this is a CLASSIFIER, not a regressor. It predicts the probabi
 - **Strengths:** simple, quick, gives calibrated-ish probabilities, weights are interpretable.
 - **Weaknesses:** only draws straight boundaries. If the two classes are tangled in a curvy way, it struggles.
 
+One thing that surprises people: sklearn's `LogisticRegression` applies L2 regularization by default (`penalty="l2"`, `C=1.0`, default solver `lbfgs`), so it is a regularized linear model out of the box - which means it, too, benefits from scaled features (see: scikit-learn LogisticRegression API and Concepts 4.4).
+
 Tiny example on a synthetic dataset. On your **lab server**, as **ec2-user**:
 
 ```python
@@ -111,6 +113,7 @@ Same dataset, random forest instead. On your **lab server**, as **ec2-user**:
 ```python
 from sklearn.ensemble import RandomForestClassifier
 
+# n_estimators is the number of trees; sklearn's default is 100, we use 200 here
 rf = RandomForestClassifier(n_estimators=200, random_state=42)
 rf.fit(X_train, y_train)
 print("RF test accuracy:", round(rf.score(X_test, y_test), 2))
@@ -192,3 +195,15 @@ The honest workflow: fit a simple baseline, get a number, then try a random fore
 - SVM and KNN require feature scaling; trees and forests do not.
 - Score on the TEST set for the honest number, never the training set.
 - The best algorithm depends on the problem; there is no single winner.
+
+---
+
+## References
+
+- scikit-learn User Guide, Supervised learning: https://scikit-learn.org/stable/supervised_learning.html
+- scikit-learn API, `LogisticRegression` (default `solver="lbfgs"`, `penalty="l2"`, `C=1.0`, `max_iter=100`; regularization applied by default): https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+- scikit-learn API, `RandomForestClassifier` (default `n_estimators=100`, `max_features="sqrt"`, `criterion="gini"`): https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+- scikit-learn User Guide, Ensembles (random forests, gradient boosting): https://scikit-learn.org/stable/modules/ensemble.html
+- scikit-learn User Guide, Support Vector Machines: https://scikit-learn.org/stable/modules/svm.html
+- scikit-learn User Guide, Nearest Neighbors: https://scikit-learn.org/stable/modules/neighbors.html
+- scikit-learn User Guide, Naive Bayes: https://scikit-learn.org/stable/modules/naive_bayes.html

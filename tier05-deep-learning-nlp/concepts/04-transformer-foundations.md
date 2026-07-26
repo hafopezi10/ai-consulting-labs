@@ -47,7 +47,7 @@ Stack many blocks and you get a deep transformer. GPT-style models are dozens of
 Transformers come in three flavors depending on which halves they use:
 
 - **Encoder-only** (for example BERT): reads a whole input and builds a rich understanding of it. Great for classification, search, and NER - tasks where you consume text and output a label or an embedding. This is the family closest to the BUILD's job.
-- **Decoder-only** (for example GPT, Claude): generates text one token at a time, each new token attending to all previous ones. This is what powers chat and text generation.
+- **Decoder-only** (for example GPT, and autoregressive chat models such as Claude): generates text one token at a time, each new token attending to all previous ones. This is what powers chat and text generation. (Note: Anthropic does not publicly document Claude's exact architecture. Grouping it here is a reasonable inference from its autoregressive, generative behavior, not a published fact - if a client presses on internals, say the architecture is not disclosed rather than asserting it.)
 - **Encoder-decoder** (for example T5, translation models): the encoder reads the input, the decoder writes the output. Natural for translation - read English, write French.
 
 Knowing which family a task needs is a consultant skill: classification wants an encoder, chat/generation wants a decoder, translation wants encoder-decoder.
@@ -127,5 +127,19 @@ Inference on a small transformer can run on CPU (slowly); production inference o
 - Pretraining teaches general language on unlabeled text at huge GPU cost (you never do it); fine-tuning specializes a pretrained model on your labeled data at modest GPU cost (you sometimes do it).
 - Inference is a forward pass, one token at a time for decoders; parameters are the count of learned weights - size the model to the job.
 - Real transformer training, fine-tuning, and large-model inference are GPU work; the BUILD stays tiny and CPU-only to teach the ideas.
+
+---
+
+## References
+
+Authoritative sources used to fact-check this document. Model IDs, context windows, and prices change constantly - verify current values from provider docs before quoting them to a client.
+
+- "Attention Is All You Need" (Vaswani et al., 2017 - the original transformer, self-attention, quadratic cost, transformer block, sinusoidal positional encoding): https://arxiv.org/abs/1706.03762
+- The Illustrated Transformer (a widely used plain-language walkthrough): https://jalammar.github.io/illustrated-transformer/
+- Hugging Face model-family summary (encoder-only / decoder-only / encoder-decoder, with BERT / GPT / T5 examples): https://huggingface.co/docs/transformers/en/model_summary
+- Subword tokenization (BPE, WordPiece, SentencePiece): https://huggingface.co/docs/transformers/en/tokenizer_summary
+- Token rule of thumb (~4 characters / ~0.75 words per token, English, approximate): https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them
+- Non-English tokenization premium ("Do All Languages Cost the Same?", Petrov et al.): https://arxiv.org/abs/2305.13707
+- Claude model IDs, context windows, and pricing (values change - always use current): https://docs.anthropic.com/
 
 Prof. Happy (SUTA Labs)

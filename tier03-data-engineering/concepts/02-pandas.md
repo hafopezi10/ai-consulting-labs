@@ -109,12 +109,13 @@ Data columns (total 4 columns):
  2   spend     4 non-null      float64
  3   orders    5 non-null      int64
 ...
+region
 East    3
 West    1
-Name: region, dtype: int64
+Name: count, dtype: int64
 ```
 
-`Non-Null Count` is gold: `region` has 4 of 5, `spend` has 4 of 5. You just found your missing data in one glance. `object` type means text (or mixed).
+`Non-Null Count` is gold: `region` has 4 of 5, `spend` has 4 of 5. You just found your missing data in one glance. `object` type means text (or mixed). Note that `value_counts()` returns a Series whose name is `count` in current pandas (it used to be named after the column) and whose own index carries the category labels (see: pandas Series.value_counts docs). With `normalize=True` the name is `proportion` instead.
 
 ---
 
@@ -224,8 +225,8 @@ West    140.0
 Name: spend, dtype: float64
         total_spend  avg_orders  customers
 region
-East          410.0    3.000000          3
-West          140.0    1.500000          2
+East          410.0         3.0          3
+West          140.0         1.5          2
 ```
 
 SQL twin: exactly `SELECT region, SUM(spend), AVG(orders), COUNT(*) FROM t GROUP BY region`. The named-aggregation form (`total_spend=("spend","sum")`) is the clearest way to write it and gives you tidy column names.
@@ -262,6 +263,8 @@ Expected output:
 ```
 
 `how="inner"` drops Cy (no orders) and order for cid 4 (no customer). `how="left"` keeps Cy with a NaN amount. Choosing the wrong join type silently changes your row count and your totals - the top cause of "the numbers don't add up." Always check row counts before and after a merge.
+
+To stack rows from two frames on top of each other (a UNION, not a join), use `pd.concat([df1, df2])`. The old `DataFrame.append` method was deprecated in pandas 1.4 and removed in pandas 2.0 (see: pandas 2.0 what's new), so any tutorial that calls `df.append(...)` is out of date - use `pd.concat` instead.
 
 ---
 
@@ -310,9 +313,10 @@ print(df["clean"].value_counts())
 Expected output:
 
 ```
+clean
 New York    2
 Boston      2
-Name: clean, dtype: int64
+Name: count, dtype: int64
 ```
 
 Before cleaning, pandas saw four distinct cities; after, two. Inconsistent text is why counts and joins fail silently, and `.str.strip().str.lower()` (or `.title()`) fixes most of it.
@@ -337,9 +341,9 @@ Expected output:
 
 ```
    spend  orders  avg_order_value  is_big_spender  tier
-0  120.0       3        40.000000           False   mid
-1   80.0       1        80.000000           False   low
-2  200.0       5        40.000000            True  high
+0  120.0       3             40.0           False   mid
+1   80.0       1             80.0           False   low
+2  200.0       5             40.0            True  high
 ```
 
 `pd.cut` turning a continuous number into labeled bands ("low/mid/high") is a very common feature-engineering move an AI model can use.
@@ -367,3 +371,17 @@ When the work is done, write it out for the next stage - a file, or straight int
 - The habits that save you: `.head()` and `.info()` after every load, `.isna().sum()` before you trust a column, and a row-count check before and after every merge.
 
 You already think in tables. pandas is your existing SQL brain, in Python, sitting one step upstream of every model you will build.
+
+---
+
+## References
+
+- pandas Getting started / 10 minutes to pandas - https://pandas.pydata.org/docs/user_guide/10min.html
+- pandas `Series.value_counts` (returns a Series named `count`) - https://pandas.pydata.org/docs/reference/api/pandas.Series.value_counts.html
+- pandas merge / join / concatenate - https://pandas.pydata.org/docs/user_guide/merging.html
+- pandas `groupby` (named aggregation) - https://pandas.pydata.org/docs/user_guide/groupby.html
+- pandas missing data (`isna`, `dropna`, `fillna`) - https://pandas.pydata.org/docs/user_guide/missing_data.html
+- pandas `.dt` and `.str` accessors - https://pandas.pydata.org/docs/user_guide/text.html and https://pandas.pydata.org/docs/user_guide/timeseries.html
+- pandas 2.0 what's new (removal of `DataFrame.append`) - https://pandas.pydata.org/docs/whatsnew/v2.0.0.html
+
+Outputs in this doc were produced on pandas 2.3.x (Python 3.12). Note: `df.info()`'s exact `memory usage` line varies by version and platform, and pandas trims trailing zeros in float display, so a whole-number mean prints as `3.0`, not `3.000000`.

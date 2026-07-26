@@ -22,7 +22,9 @@ Retrieval is a search problem, so you use search metrics. For a question whose c
 
 - **Precision@k** - of the top *k* chunks retrieved, what fraction are actually relevant? (Did we retrieve junk?)
 - **Recall@k** - of all the relevant chunks that exist, what fraction did we retrieve in the top *k*? (Did we miss the good one?)
-- **Context relevance** - a broader judgement: how on-topic is the retrieved context as a whole?
+- **MRR** (Mean Reciprocal Rank) - how high up did the *first* relevant chunk land, averaged across questions? Rewards putting a good chunk at position 1 rather than position 5.
+- **NDCG** (Normalized Discounted Cumulative Gain) - a rank-aware score that credits relevant chunks more when they appear near the top. Use it when *ordering* within the top *k* matters, not just membership.
+- **Context relevance / context precision** - a broader judgement: how on-topic is the retrieved context as a whole? In the Ragas framework this is `context_precision` (are the retrieved contexts relevant and well-ranked) paired with `context_recall` (did retrieval bring back all the information the answer needs). See section 5 for how these are scored.
 
 If retrieval recall is low, the right chunk never reaches the LLM and no prompt tweak can fix the answer - fix retrieval first (chunking, embeddings, hybrid search).
 
@@ -32,8 +34,8 @@ If retrieval recall is low, the right chunk never reaches the LLM and no prompt 
 
 Assuming retrieval fetched the right context, judge the answer:
 
-- **Answer relevance** - does the answer actually address the question asked?
-- **Groundedness (faithfulness)** - is every claim in the answer supported by the retrieved context, with nothing invented? This is the anti-hallucination metric and the single most important one for enterprise trust. An answer can be relevant *and* ungrounded (it addresses the question but made the facts up).
+- **Answer relevance** - does the answer actually address the question asked? (In the Ragas framework this is `answer_relevancy`, also called response relevancy.)
+- **Groundedness (faithfulness)** - is every claim in the answer supported by the retrieved context, with nothing invented? This is the anti-hallucination metric and the single most important one for enterprise trust. An answer can be relevant *and* ungrounded (it addresses the question but made the facts up). Ragas calls this `faithfulness` and computes it as the fraction of the answer's claims that are supported by the retrieved context (see: docs.ragas.io).
 - **Citation accuracy** - do the sources the answer cites actually contain the claims attributed to them? A citation that points to the wrong chunk is worse than no citation - it manufactures false confidence.
 - **Unsupported-claim rate** - the flip side of groundedness: what fraction of the answer's statements have no support in the context? You want this near zero.
 
@@ -85,3 +87,13 @@ Evaluation is done before shipping; **monitoring** is continuous, after shipping
 Wire a `/metrics` (or `/health`) endpoint that reports these, so an operator - or an alerting system - can see the system's health at a glance. A RAG system without monitoring is one silent regression away from quietly serving wrong answers, and no one will know until a user complains.
 
 That completes the concepts. Now build it: [../build/01-project7-enterprise-knowledge-assistant.md](../build/01-project7-enterprise-knowledge-assistant.md).
+
+---
+
+## References
+
+Authoritative sources used to fact-check this document. Framework metric names and defaults change - reconfirm before quoting specifics to a client.
+
+- Ragas metrics (faithfulness, answer_relevancy, context_precision, context_recall, LLM-as-judge): https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/
+- Retrieval metric definitions (Precision@k, Recall@k, MRR, NDCG): standard information-retrieval references; Ragas context-precision uses the precision@k formula - https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/
+- Latency percentiles (p50 / p95 / p99, why not the average): https://redis.io/blog/p95-latency/

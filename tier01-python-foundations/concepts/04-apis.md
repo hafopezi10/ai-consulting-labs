@@ -25,7 +25,7 @@ The **method** (or verb) says what kind of action you want. The four you must kn
 | `PUT` | replace something whole | `PUT /tickets/42` | yes |
 | `DELETE` | remove something | `DELETE /tickets/42` | yes |
 
-The critical property: **`GET` is safe and should never change data.** A monitor hitting `GET /health` a thousand times must be harmless. `POST`/`PUT`/`DELETE` change state. `PUT` and `DELETE` should be **idempotent** - doing them twice has the same effect as once (deleting ticket 42 twice still leaves it deleted). `POST` usually is not, which is why creating things needs care (see idempotency below).
+The critical property: **`GET` is safe and should never change data.** A monitor hitting `GET /health` a thousand times must be harmless. `POST`/`PUT`/`DELETE` change state. By the HTTP spec, `GET` is both safe and idempotent; `PUT` and `DELETE` are idempotent but not safe; `POST` is neither (see: MDN, HTTP request methods). Idempotent means doing it twice has the same effect as once (deleting ticket 42 twice still leaves it deleted). `POST` usually is not, which is why creating things needs care (see idempotency below).
 
 ---
 
@@ -98,7 +98,7 @@ The **status code** is a three-digit number saying how the request went. Learn t
 - **2xx - success.** `200 OK` (got it), `201 Created` (POST made something), `204 No Content` (success, nothing to return).
 - **3xx - redirect.** `301`/`302` (the resource moved).
 - **4xx - the caller's fault.** `400 Bad Request` (malformed), `401 Unauthorized` (no/invalid credential), `403 Forbidden` (valid credential, not allowed), `404 Not Found`, `429 Too Many Requests` (you are rate-limited).
-- **5xx - the server's fault.** `500 Internal Server Error` (it crashed), `503 Service Unavailable` (temporarily down - `app.py` returns this when the database is unreachable).
+- **5xx - the server's fault.** `500 Internal Server Error` (it crashed), `503 Service Unavailable` (temporarily down, and the standard code when a server is overloaded or under maintenance - `app.py` returns this when the database is unreachable; a `503` should carry a `Retry-After` header when a recovery time is known - see: MDN, 503).
 
 The dividing rule: **4xx means fix your request; 5xx means the server is broken - retrying may help.** Your client should retry 5xx and 429, but not 400 or 401 (retrying a bad request just fails again). This distinction drives all resilient-client logic.
 
@@ -142,7 +142,7 @@ The key idea versus an API key: OAuth tokens are per-user, scoped (limited to ce
 
 ## 10. Rate limits
 
-A **rate limit** caps how many requests you may send in a window (for example, 60 per minute). Exceed it and the server returns `429 Too Many Requests`, often with a `Retry-After` header telling you how long to wait. Every serious API - especially LLM providers - rate-limits you.
+A **rate limit** caps how many requests you may send in a window (for example, 60 per minute). Exceed it and the server returns `429 Too Many Requests`, often with a `Retry-After` header telling you how long to wait (`Retry-After` may be a number of seconds or an HTTP date - see: MDN, Retry-After). Every serious API - especially LLM providers - rate-limits you.
 
 Your job as a client: respect the limit. When you get a `429`, do not hammer - wait (honor `Retry-After` if present, otherwise back off) and retry. A well-behaved client stays under the limit and degrades gracefully when it hits one.
 
@@ -181,10 +181,11 @@ A **timeout** is the maximum time you will wait for a response before giving up.
 
 ```python
 import requests
-requests.get(url, timeout=5)   # give up after 5 seconds
+requests.get(url, timeout=5)          # one value applies to BOTH connect and read
+requests.get(url, timeout=(3.05, 27)) # (connect timeout, read timeout) separately
 ```
 
-Set both a connection timeout (time to establish the connection) and a read timeout (time to get the response). A timeout is a transient failure, so it pairs with retries: time out, back off, try again, and cap the attempts.
+By default `requests` has NO timeout - it can hang indefinitely - so you must always pass one (see: requests docs, Timeouts). A single value applies to both the connection timeout (time to establish the connection) and the read timeout (time to get the response); pass a `(connect, read)` tuple to set them separately. A timeout is a transient failure, so it pairs with retries: time out, back off, try again, and cap the attempts.
 
 ---
 
@@ -242,3 +243,17 @@ This matters the moment you add retries or receive webhooks, because both cause 
 - **idempotency / idempotency key** - doing it twice equals doing it once; makes retries and webhooks safe.
 
 You now have the full C layer. Next you apply it: the USE exercises and the SURVIVE scenarios.
+
+---
+
+## References
+
+- MDN, HTTP request methods (safe vs idempotent): https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+- MDN, HTTP response status codes: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+- MDN, 503 Service Unavailable: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+- MDN, 429 Too Many Requests: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429
+- MDN, Retry-After header: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After
+- RFC 9110, HTTP Semantics (methods, status codes, idempotency): https://www.rfc-editor.org/rfc/rfc9110
+- MDN, Authorization header / Bearer scheme: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
+- requests documentation, Timeouts: https://requests.readthedocs.io/en/latest/user/advanced/#timeouts
+- JSON specification: https://www.json.org/

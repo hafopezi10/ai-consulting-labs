@@ -196,7 +196,7 @@ print(fahrenheit)
 Expected output:
 
 ```
-[ 32.  68.  98.6 212. ]
+[ 32.   68.   98.6 212. ]
 ```
 
 ---
@@ -234,7 +234,7 @@ AI is full of randomness: shuffling data, initializing weights, sampling. Set a 
 
 ```python
 import numpy as np
-rng = np.random.default_rng(seed=42)   # modern seeded generator
+rng = np.random.default_rng(seed=42)   # modern seeded generator (PCG64 bit generator)
 print(rng.integers(0, 100, size=5))    # 5 random ints in [0, 100)
 print(rng.normal(0, 1, size=3).round(3))  # 3 draws from a normal curve
 ```
@@ -243,10 +243,12 @@ Expected output:
 
 ```
 [ 8 77 65 43 43]
-[ 0.305 -1.04  0.75 ]
+[ 0.941 -1.951 -1.302]
 ```
 
-Because we seeded with 42, you will get these exact numbers too. Change the seed and everything changes; remove it and every run differs. Always seed before you report a number someone will act on.
+Because we seeded with 42, you will get these exact numbers too, as long as the two draws happen in this order from the same generator (the `integers` call advances the generator's state before `normal` runs). Change the seed and everything changes; remove it and every run differs. Always seed before you report a number someone will act on.
+
+`np.random.default_rng` is the recommended modern API (NumPy 1.17+); the older `np.random.seed` / `np.random.rand` global functions still work but are legacy (see: NumPy random generator docs). The default bit generator behind `default_rng` is PCG64, not the old Mersenne Twister.
 
 ---
 
@@ -282,3 +284,15 @@ When a total comes out as `nan`, you have missing data hiding in the input. Use 
 - Vectorization is why AI math is fast enough to be practical. When your analysis is slow, the fix is usually "stop looping, start vectorizing."
 
 You do not need to memorize the whole API. You need to read a shape, spot a broadcast, find a NaN, and know that `axis=0` goes down. That fluency carries you through pandas and every model you will ever touch.
+
+---
+
+## References
+
+- NumPy array creation - https://numpy.org/doc/stable/user/basics.creation.html
+- NumPy indexing and broadcasting - https://numpy.org/doc/stable/user/basics.broadcasting.html
+- NumPy random Generator (`default_rng`, PCG64) - https://numpy.org/doc/stable/reference/random/generator.html
+- NumPy `np.nan` and nan-aware functions (`nansum` etc.) - https://numpy.org/doc/stable/reference/constants.html and https://numpy.org/doc/stable/reference/routines.statistics.html
+- Best practices for NumPy random generators - https://blog.scientific-python.org/numpy/numpy-rng/
+
+Outputs in this doc were produced on NumPy 2.3.x (Python 3.12, 64-bit). On 64-bit Linux and macOS the default integer dtype is `int64`; on Windows it is `int32`.

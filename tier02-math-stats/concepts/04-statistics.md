@@ -63,10 +63,10 @@ Expected output:
 
 ```
 p50 (median): 22.5
-p95: 245.5
+p95: 260.5
 ```
 
-Half the requests finish under 22.5ms, but 5% take longer than 245.5ms. As a DBA you live in p95 and p99. Carry that habit into AI: report tail latency for model inference, not just the average.
+Half the requests finish under 22.5ms, but 5% take longer than 260.5ms. As a DBA you live in p95 and p99. Carry that habit into AI: report tail latency for model inference, not just the average. (NumPy's default percentile method is `linear` interpolation between the two nearest ranks, which is why p95 lands between the 90 and 400 data points rather than exactly on one - see: numpy.percentile docs.)
 
 ---
 
@@ -93,7 +93,7 @@ Expected output:
 correlation: 0.998
 ```
 
-Almost a perfect line: more study, higher score. But be careful - correlation only catches **linear** relationships, and, critically, **correlation is not causation** (Concepts 2.4 SURVIVE scenario 3 drills this). Ice cream sales and drowning deaths correlate; ice cream does not cause drowning. Summer causes both.
+Almost a perfect line: more study, higher score. But be careful - the Pearson correlation `np.corrcoef` computes only catches **linear** relationships (see: NIST e-Handbook 1.3.5.11), and, critically, **correlation is not causation** (Concepts 2.4 SURVIVE scenario 3 drills this). Ice cream sales and drowning deaths correlate; ice cream does not cause drowning. Summer causes both.
 
 ---
 
@@ -107,7 +107,7 @@ It means: if we repeated the sampling many times, about 95% of the intervals we 
 import numpy as np
 sample = np.random.normal(loc=50, scale=10, size=200)
 mean = sample.mean()
-sem = sample.std(ddof=1) / np.sqrt(len(sample))   # standard error of the mean
+sem = sample.std(ddof=1) / np.sqrt(len(sample))   # standard error of the mean (ddof=1 = sample std, divide by n-1)
 lo, hi = mean - 1.96 * sem, mean + 1.96 * sem      # 95% interval
 print(f"mean {mean:.2f}, 95% CI [{lo:.2f}, {hi:.2f}]")
 ```
@@ -118,7 +118,7 @@ Expected output (yours will differ):
 mean 49.83, 95% CI [48.44, 51.21]
 ```
 
-The `1.96` is the magic number for 95% under a normal distribution. When you present results to an executive, give the interval, not just the point estimate. "Conversion improved 2%, plus or minus 3%" is honest; "conversion improved 2%" pretends to a precision you do not have.
+The `1.96` is the magic number for 95% under a normal distribution: 95% of a standard normal's area lies within plus or minus 1.96 standard deviations of the mean (see: Wikipedia 97.5th percentile point). Note this z-based interval assumes a large sample; for small samples the more exact choice is the t-distribution critical value, which for a few hundred observations is already about 1.97, effectively the same (see: NIST e-Handbook 1.3.5.2). When you present results to an executive, give the interval, not just the point estimate. "Conversion improved 2%, plus or minus 3%" is honest; "conversion improved 2%" pretends to a precision you do not have.
 
 ---
 
@@ -135,7 +135,7 @@ You start with a **null hypothesis** - the boring assumption that there is no re
 from scipy import stats
 group_a = np.random.normal(100, 15, 500)          # control
 group_b = np.random.normal(103, 15, 500)          # treatment, small real effect
-t_stat, p_value = stats.ttest_ind(group_a, group_b)
+t_stat, p_value = stats.ttest_ind(group_a, group_b)  # independent two-sample t-test; defaults to equal_var=True
 print("p-value:", round(p_value, 4))
 ```
 
@@ -149,6 +149,8 @@ A p-value of 0.0018 is well below 0.05, so we would call this difference signifi
 
 - **Significant does not mean large or important.** With a huge sample, a tiny meaningless difference can be "significant". Always report the effect size too.
 - **p < 0.05 is a convention, not a law of nature.** It still means roughly a 1-in-20 chance of a false alarm. Run enough tests and some will "pass" by luck.
+
+One technical note: `ttest_ind` defaults to `equal_var=True` (Student's t-test, assumes both groups have the same variance). If you are not sure the variances match, pass `equal_var=False` for Welch's t-test, which is the safer default in practice (see: scipy.stats.ttest_ind docs).
 
 ---
 
@@ -186,3 +188,15 @@ Good design also means: decide your sample size and metric **before** you start 
 - Sampling and selection bias can wreck a mathematically perfect analysis; randomized A/B tests are the fix.
 
 Next: **Concepts 2.5 - Calculus intuition**, the last piece, where we learn how models actually learn.
+
+---
+
+## References
+
+- numpy.percentile (default `linear` method): https://numpy.org/doc/stable/reference/generated/numpy.percentile.html
+- numpy.std / numpy.var (`ddof` parameter, sample vs population): https://numpy.org/doc/stable/reference/generated/numpy.std.html
+- numpy.corrcoef (Pearson linear correlation): https://numpy.org/doc/stable/reference/generated/numpy.corrcoef.html
+- scipy.stats.ttest_ind (signature, `equal_var` default): https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html
+- NIST/SEMATECH e-Handbook, correlation coefficient (linear only): https://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
+- NIST/SEMATECH e-Handbook, confidence limits for the mean: https://www.itl.nist.gov/div898/handbook/eda/section3/eda352.htm
+- 97.5th percentile point (why 1.96 for 95%): https://en.wikipedia.org/wiki/97.5th_percentile_point

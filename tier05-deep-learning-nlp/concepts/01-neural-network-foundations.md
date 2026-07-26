@@ -140,8 +140,8 @@ A network with enough capacity can **memorize** the training data instead of lea
 Tools to fight it:
 
 - **Validation set**: hold out some data the model never trains on. Watch its loss. When training loss falls but validation loss starts rising, you are overfitting. (This is the SURVIVE "overfitting" scenario.)
-- **Regularization** (weight decay): gently push weights toward zero so the model stays simple and cannot memorize noise.
-- **Dropout**: during training, randomly switch off a fraction of neurons each step. The network cannot lean on any single neuron, so it learns more robust, spread-out patterns. Dropout is on during training and off during prediction.
+- **Regularization** (weight decay): gently push weights toward zero so the model stays simple and cannot memorize noise. (Weight decay equals classic L2 regularization under plain SGD; for adaptive optimizers like Adam the two differ, which is why the `AdamW` variant exists - it applies weight decay correctly. You do not need the math here, just know the term.)
+- **Dropout**: during training, randomly switch off a fraction of neurons each step. The network cannot lean on any single neuron, so it learns more robust, spread-out patterns. Dropout is on during training and off during prediction. (Modern frameworks implement "inverted dropout" - they scale the surviving activations up during training so no adjustment is needed at prediction time; the framework handles this for you.)
 - **Early stopping**: stop training at the epoch where validation loss is lowest, before it starts rising.
 
 A trustworthy consultant always reports how a model does on held-out data, never just on the data it trained on.
@@ -163,5 +163,18 @@ Everything above is math a CPU can do. The reason deep learning waited for GPUs 
 - Cross-entropy is the classification loss; Adam is the default optimizer; ReLU + softmax is the default activation combo for a classifier.
 - Overfitting is memorizing the training set. Fight it with a validation set, dropout, weight decay, and early stopping.
 - CPU is fine for tiny models; a real project reaches for a GPU when the model and data get large.
+
+---
+
+## References
+
+Authoritative sources used to fact-check the concepts in this document.
+
+- Neural networks, activations (ReLU, sigmoid, softmax), and overfitting - Stanford CS231n notes: https://cs231n.github.io/neural-networks-1/ and https://cs231n.github.io/neural-networks-2/
+- Backpropagation (the chain rule) - CS231n: https://cs231n.github.io/optimization-2/ and Dive into Deep Learning: https://d2l.ai/chapter_multilayer-perceptrons/backprop.html
+- Softmax and cross-entropy loss - Dive into Deep Learning: https://d2l.ai/chapter_linear-classification/softmax-regression.html
+- Optimizers (SGD, momentum, Adam) - Dive into Deep Learning: https://d2l.ai/chapter_optimization/adam.html
+- Weight decay vs L2 (and AdamW) - Dive into Deep Learning: https://d2l.ai/chapter_linear-regression/weight-decay.html
+- PyTorch autograd and the training loop (the framework that runs this): https://docs.pytorch.org/tutorials/beginner/basics/optimization_tutorial.html
 
 Prof. Happy (SUTA Labs)

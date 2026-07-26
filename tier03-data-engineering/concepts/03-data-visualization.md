@@ -132,7 +132,7 @@ The one rule that matters: **bar charts must start the y-axis at zero.** Startin
 
 ## 6. Box plot - distribution and outliers at a glance
 
-A box plot summarizes a distribution with five numbers: min, first quartile, median, third quartile, max, and flags outliers as separate dots. It is the fastest way to compare groups and spot anomalies.
+A box plot summarizes a distribution with the five-number summary: the first quartile, the median, and the third quartile form the box, and two whiskers reach out toward the extremes. In matplotlib the whiskers stop at the most distant point still within 1.5 times the interquartile range (not necessarily the true min and max), and points beyond the whiskers are flagged as outliers (fliers). It is the fastest way to compare groups and spot anomalies.
 
 ```python
 import numpy as np
@@ -141,14 +141,16 @@ group_a = rng.normal(50, 10, size=100)
 group_b = rng.normal(60, 20, size=100)
 group_b = np.append(group_b, [150, 160])   # two outliers
 fig, ax = plt.subplots(figsize=(6, 4))
-ax.boxplot([group_a, group_b], labels=["A", "B"])
+ax.boxplot([group_a, group_b], tick_labels=["A", "B"])   # tick_labels is the current name
 ax.set_title("Score distribution by group")
 ax.set_ylabel("Score")
 fig.savefig("box.png", dpi=100, bbox_inches="tight")
 plt.close(fig)
 ```
 
-The line inside the box is the median. The box spans the middle 50% (the interquartile range). Dots beyond the whiskers are outliers - exactly the data-entry errors and anomalies you hunt in Concepts 3.4. Box plots side by side answer "is group B really higher, or just more spread out?"
+The line inside the box is the median. The box spans the middle 50% (the interquartile range, IQR). By default matplotlib draws the whiskers out to the last data point within 1.5 * IQR of the box, and anything past that is drawn as a separate flier point - so "outlier" here has a precise definition, not a visual guess (see: matplotlib boxplot docs). Box plots side by side answer "is group B really higher, or just more spread out?"
+
+Note on the argument name: use `tick_labels=` (as above), not `labels=`. The `labels` parameter was renamed to `tick_labels` in Matplotlib 3.9 and the old name is deprecated and slated for removal in 3.11 (see: Matplotlib 3.9 API changes).
 
 ---
 
@@ -211,3 +213,15 @@ The consultant's job is often to redraw a client's misleading chart honestly and
 - Being the person in the room who spots a misleading chart - and can redraw it straight - is a durable reputation. Models come and go; honest analysis is why clients call you back.
 
 You do not need to be a designer. You need five chart types, the discipline to label them, and the honesty to refuse to lie with the y-axis.
+
+---
+
+## References
+
+- Matplotlib Figure/Axes and the object-oriented interface - https://matplotlib.org/stable/users/explain/quick_start.html
+- Matplotlib pyplot / Axes API (`hist`, `scatter`, `plot`, `bar`, `boxplot`, `imshow`) - https://matplotlib.org/stable/api/axes_api.html
+- Matplotlib `Axes.boxplot` (whiskers, IQR, fliers, `tick_labels`) - https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html
+- Matplotlib 3.9.0 API changes (`labels` -> `tick_labels`) - https://matplotlib.org/stable/api/prev_api_changes/api_changes_3.9.0.html
+- Matplotlib backends (the `Agg` non-interactive backend) - https://matplotlib.org/stable/users/explain/figure/backends.html
+
+Snippets were checked on Matplotlib 3.10.x (Python 3.12). The `Agg` backend renders to files with no display, which is why it is set before importing `pyplot` on a headless server.

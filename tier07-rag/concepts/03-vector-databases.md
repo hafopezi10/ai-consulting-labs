@@ -14,8 +14,8 @@ A vector database stores your chunk vectors and answers one core question quickl
 
 **pgvector** is a PostgreSQL extension that adds:
 
-- A `vector(N)` column type - stores an N-dimensional vector in a normal table column.
-- Distance operators - `<=>` (cosine), `<->` (L2), `<#>` (inner product).
+- A `vector(N)` column type - stores an N-dimensional vector (single-precision `float4` elements) in a normal table column. The `vector` type allows up to 16,000 dimensions, but an *indexed* column is capped at 2,000 dimensions (see: github.com/pgvector/pgvector). pgvector also ships `halfvec` (half-precision), `bit` (binary), and `sparsevec` (sparse) column types for lower storage or specialized workloads.
+- Distance operators. The three you use for float embeddings are `<=>` (cosine distance), `<->` (L2 / Euclidean distance), and `<#>` (negative inner product - it returns the *negative* value because Postgres index scans only order ascending). pgvector also has `<+>` (L1 / Manhattan) and, for `bit` vectors only, `<~>` (Hamming) and `<%>` (Jaccard). See [02-embeddings.md](02-embeddings.md) for which to use.
 - Vector indexes - HNSW and IVFFlat (below).
 
 Why this is the pragmatic enterprise choice:
@@ -49,10 +49,10 @@ The consultant's line: *"Start on Postgres + pgvector. Move to a dedicated vecto
 
 Without an index, pgvector does an **exact** search - it computes the distance to every row. Correct, but O(rows) per query. With an index, it does an **approximate** search - much faster, occasionally missing a true nearest neighbour.
 
-- **HNSW** (Hierarchical Navigable Small World) - a graph index. Best recall/speed trade-off, higher memory, slower to build. The default choice for most workloads.
-- **IVFFlat** - clusters vectors into lists and only searches the nearest lists. Faster to build, less memory, needs the data present before you build it (it learns clusters from the data).
+- **HNSW** (Hierarchical Navigable Small World) - a multilayer graph index. Best recall/speed trade-off, but higher memory and slower to build. It can be built on an empty table (it does not learn from the data). The default choice for most workloads. Build-time parameters are `m` (connections per node, default 16) and `ef_construction` (default 64); query-time recall is tuned with `hnsw.ef_search` (default 40) - raise it for better recall at the cost of speed (see: github.com/pgvector/pgvector).
+- **IVFFlat** - clusters vectors into lists and only searches the nearest lists. Faster to build and lighter on memory, but a lower recall/speed trade-off. It should be built *after* the table already has representative data, because it learns its cluster centers from the existing rows - building it on an empty (or tiny) table produces poor clusters. Build-time parameter is `lists` (number of clusters); query-time parameter is `ivfflat.probes` (how many lists to search, default 1) - raise it for better recall.
 
-For Project 7's small dataset you can skip the index (exact search is instant on a few dozen chunks) and add HNSW when the data grows. The concept to carry: **an index trades a little accuracy for a lot of speed, and you tune how much.**
+For Project 7's small dataset you can skip the index (exact search is instant on a few dozen chunks) and add HNSW when the data grows. The concept to carry: **an index makes search *approximate* - it trades a little accuracy (recall) for a lot of speed, and you tune how much.** Without any index, pgvector does an exact scan (perfect recall, O(rows) per query).
 
 ---
 
@@ -90,8 +90,21 @@ A subtle, dangerous bug: filtering the *documents* but not the *chunks*, or appl
 ## 7. Hybrid search: dense + sparse
 
 - **Dense** retrieval = vector/embedding search. Great at meaning, weak at exact tokens (a specific error code `ORA-00942`, a part number).
-- **Sparse** retrieval = keyword search (e.g. Postgres full-text search / BM25-style ranking). Great at exact tokens, weak at meaning.
+- **Sparse** retrieval = keyword search. Great at exact tokens, weak at meaning.
 
-**Hybrid search** runs both and combines the scores, so you get semantic recall *and* exact-term precision. You build this in USE exercise 2 and measure that it improves retrieval over dense alone. In Postgres, dense is pgvector and sparse is `tsvector` / `ts_rank`, combined with a scoring formula - all in one query.
+**Hybrid search** runs both and combines the scores, so you get semantic recall *and* exact-term precision. You build this in USE exercise 2 and measure that it improves retrieval over dense alone. In Postgres, dense is pgvector and sparse is built-in full-text search (`tsvector` / `tsquery` with the `ts_rank` or `ts_rank_cd` ranking functions), combined with a scoring formula - all in one query.
+
+One precision point to get right as a consultant: **Postgres's built-in `ts_rank` is a frequency-based lexical score, not true BM25.** It does not do BM25's inverse-document-frequency weighting, term-frequency saturation, or document-length normalization (see: postgresql.org/docs textsearch-controls). It works well enough for hybrid search in Project 7, but if a client needs real BM25 you reach for an extension - ParadeDB / `pg_search`, VectorChord-bm25, or `pg_textsearch` - not plain `ts_rank`. Do not tell a client "Postgres gives you BM25 out of the box"; it gives you lexical ranking that is close enough for many jobs.
 
 Next: [04-document-processing.md](04-document-processing.md).
+
+---
+
+## References
+
+Authoritative sources used to fact-check this document. Model capabilities, versions, and defaults change - reconfirm before quoting specifics to a client.
+
+- pgvector README (types, distance operators, HNSW/IVFFlat indexes, parameters, dimension limits): https://github.com/pgvector/pgvector
+- PostgreSQL full-text search ranking (`ts_rank`, `ts_rank_cd`; note BM25 is not built in): https://www.postgresql.org/docs/current/textsearch-controls.html
+- Real-BM25-in-Postgres extensions: ParadeDB / pg_search (https://www.paradedb.com/), VectorChord-bm25 (https://github.com/tensorchord/VectorChord-bm25), pg_textsearch (https://github.com/timescale/pg_textsearch)
+- Managed Postgres + pgvector options: AWS RDS/Aurora, Supabase (https://supabase.com/docs/guides/ai), Neon (https://neon.tech/docs/extensions/pgvector)

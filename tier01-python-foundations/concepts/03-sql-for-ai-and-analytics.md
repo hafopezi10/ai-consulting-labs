@@ -49,8 +49,8 @@ SELECT
 FROM support_tickets;
 ```
 
-- `IS NULL` tests for missing values - never `= NULL`, which is always unknown in SQL.
-- `count(*) FILTER (WHERE ...)` counts only rows matching the condition - a clean way to get several conditional counts in one pass.
+- `IS NULL` tests for missing values - never `= NULL`, which always evaluates to `NULL` (unknown), so it matches nothing in SQL's three-valued logic.
+- `count(*) FILTER (WHERE ...)` counts only rows matching the condition - a clean way to get several conditional counts in one pass. `FILTER` on aggregates is standard SQL, supported in Postgres (see: PostgreSQL docs, SELECT / aggregate expressions).
 - `trim(subject) = ''` catches "empty but not null" - a string of spaces. Real data has both. This mirrors `app.py` skipping blank subjects.
 
 ---
@@ -102,7 +102,7 @@ GROUP BY category
 ORDER BY n DESC;
 ```
 
-Common aggregate functions: `count()`, `sum()`, `avg()`, `min()`, `max()`. `GROUP BY` defines the buckets; every non-aggregated column in the SELECT must appear in the `GROUP BY`. Doing this count in SQL instead of Python pushes the work to the database, which is far faster over large tables - a key optimization instinct for a DBA moving into AI.
+Common aggregate functions: `count()`, `sum()`, `avg()`, `min()`, `max()`. `GROUP BY` defines the buckets; every non-aggregated column in the SELECT must appear in the `GROUP BY` (Postgres relaxes this only when the other columns are functionally dependent on a grouped primary key; treat the strict rule as your default). Doing this count in SQL instead of Python pushes the work to the database, which is far faster over large tables - a key optimization instinct for a DBA moving into AI.
 
 ---
 
@@ -119,7 +119,7 @@ SELECT
 FROM support_tickets;
 ```
 
-- `OVER (...)` turns an ordinary function into a window function.
+- `OVER (...)` turns an ordinary function into a window function; the rows keep their separate identities instead of collapsing into one output row (see: PostgreSQL docs, Window Functions).
 - `PARTITION BY category` = "restart the calculation for each category" (like `GROUP BY`, but rows are kept).
 - `ORDER BY created_at DESC` orders rows inside each partition.
 - `row_number()` numbers rows 1, 2, 3... within the partition - the standard dedupe and "top-N-per-group" tool.
@@ -140,7 +140,7 @@ SELECT * FROM support_tickets TABLESAMPLE BERNOULLI (20);
 SELECT * FROM support_tickets ORDER BY random() LIMIT 5;
 ```
 
-`TABLESAMPLE` is fast and built for this on large tables; `ORDER BY random() LIMIT n` is simpler and fine for small ones (but scans the whole table). Sampling keeps exploration cheap. When you build train/test splits, prefer a deterministic method (hash of the id) so the split is reproducible.
+`TABLESAMPLE BERNOULLI (20)` returns approximately 20% of rows by testing each row independently; the faster `TABLESAMPLE SYSTEM (20)` samples whole disk blocks (less statistically even). Add `REPEATABLE (seed)` for a reproducible sample (see: PostgreSQL docs, SELECT / TABLESAMPLE). `ORDER BY random() LIMIT n` is simpler and fine for small tables (but scans the whole table). When you build train/test splits, prefer a deterministic method (hash of the id) so the split is reproducible.
 
 ---
 
@@ -203,8 +203,8 @@ FROM tickets_json,
 WHERE meta ->> 'source' = 'email';
 ```
 
-- `->` returns JSON; `->>` returns text. Use `->>` when you want a plain value to compare or display.
-- `jsonb_array_elements_text(...)` expands a JSON array into one row per element - the JSON equivalent of unpivoting.
+- `->` returns `json`/`jsonb`; `->>` returns `text`. Use `->>` when you want a plain value to compare or display (see: PostgreSQL docs, JSON Functions and Operators).
+- `jsonb_array_elements_text(...)` expands a JSON array into one row per element (as `text`) - the JSON equivalent of unpivoting. `jsonb_array_length(...)` returns the element count as an integer.
 - Postgres native array columns have their own operators (`unnest()`, `= ANY(...)`, `array_agg()`).
 
 You do not have a JSON column in `support_tickets`, but you will hit this constantly with AI data, so the syntax is here as reference.
@@ -269,3 +269,15 @@ SELECT 'duplicate_subjects', count(*)::text FROM (
 - **data-quality query / `UNION ALL`** - a repeatable, alertable set of quality metrics.
 
 Next: [04-apis.md](04-apis.md) - how programs talk to each other over HTTP.
+
+---
+
+## References
+
+- PostgreSQL docs, Window Functions (tutorial): https://www.postgresql.org/docs/current/tutorial-window.html
+- PostgreSQL docs, Window Functions (function list - `row_number`, `rank`, `dense_rank`, `lag`, `lead`): https://www.postgresql.org/docs/current/functions-window.html
+- PostgreSQL docs, SELECT (TABLESAMPLE, GROUP BY, HAVING): https://www.postgresql.org/docs/current/sql-select.html
+- PostgreSQL docs, Aggregate expressions (FILTER clause): https://www.postgresql.org/docs/current/sql-expressions.html#SYNTAX-AGGREGATES
+- PostgreSQL docs, JSON Functions and Operators (`->`, `->>`, `jsonb_array_elements_text`, `jsonb_array_length`): https://www.postgresql.org/docs/current/functions-json.html
+- PostgreSQL docs, Date/Time Functions (`date_trunc`, `extract`, `AT TIME ZONE`): https://www.postgresql.org/docs/current/functions-datetime.html
+- PostgreSQL docs, CREATE VIEW / CREATE MATERIALIZED VIEW: https://www.postgresql.org/docs/current/sql-createview.html

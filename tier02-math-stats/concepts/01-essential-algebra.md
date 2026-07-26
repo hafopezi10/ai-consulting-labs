@@ -89,7 +89,7 @@ Expected output:
 
 Two facts you will meet constantly:
 
-- `x**0 = 1` for any non-zero `x`.
+- `x**0 = 1` for any non-zero `x` (the `0**0` case is left undefined/indeterminate, though Python returns `1` for it - see: MathWorld Exponent).
 - Negative exponents mean "one over": `2**-1 = 0.5`.
 
 Exponents show up in growth (data doubling every year), in the softmax function that turns raw model scores into probabilities, and in the number of possible values a vector can take.
@@ -100,7 +100,7 @@ Exponents show up in growth (data doubling every year), in the softmax function 
 
 A **logarithm** is the reverse of an exponent. It answers: "what power do I raise the base to, to get this number?"
 
-`log2(8) = 3` because `2**3 = 8`.
+`log2(8) = 3` because `2**3 = 8` (a logarithm is the inverse of exponentiation - see: MathWorld Logarithm).
 
 ```python
 import math
@@ -117,7 +117,7 @@ Why logs matter in AI:
 
 - **They compress huge ranges.** A number that goes from 1 to 1,000,000 becomes 0 to 20 in log-base-2. Loss values and probabilities span many orders of magnitude, so we look at them in log scale.
 - **Log-loss (cross-entropy)** is the standard loss function for classification. When a model is confident and wrong, the log makes the penalty explode, which is exactly what you want.
-- The **natural log** `ln` (base `e`, about 2.718) is the default in math. In Python `math.log(x)` is the natural log.
+- The **natural log** `ln` (base `e`, about 2.71828) is the default in math. In Python `math.log(x)` is the natural log; `math.log(x, base)` takes an explicit base (see: Python math module docs).
 
 ```python
 math.log(math.e)
@@ -228,3 +228,15 @@ Example in plain terms: `P(spam | contains the word "free") = 0.7` reads "if an 
 - `P(A | B)` = probability of A given B; keep this in your pocket for probability.
 
 Next: **Concepts 2.2 - Linear algebra**, where numbers become vectors and matrices, the native language of embeddings and neural networks.
+
+---
+
+## References
+
+- MathWorld, Logarithm (inverse of exponentiation): https://mathworld.wolfram.com/Logarithm.html
+- MathWorld, Exponent: https://mathworld.wolfram.com/Exponent.html
+- MathWorld, Slope (rise over run): https://mathworld.wolfram.com/Slope.html
+- MathWorld, Polynomial: https://mathworld.wolfram.com/Polynomial.html
+- Python math module (`math.log` natural log, `math.log2`): https://docs.python.org/3/library/math.html
+- numpy.sum (sigma / summation): https://numpy.org/doc/stable/reference/generated/numpy.sum.html
+- NIST/SEMATECH e-Handbook, conditional probability (P(A|B)): https://www.itl.nist.gov/div898/handbook/apr/section1/apr131.htm

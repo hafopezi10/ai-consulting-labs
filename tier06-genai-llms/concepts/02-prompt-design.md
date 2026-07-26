@@ -198,4 +198,15 @@ A prompt library with versioning plus a regression set is the mark of a mature L
 - Expect refusals and detect them; design around safety, never try to defeat it.
 - Test prompts against a regression set, and keep prompts in a named, versioned library.
 
+---
+
+## References
+
+Authoritative sources for the prompt-design techniques in this document. Provider-specific guidance evolves - check the current docs before relying on a specific behavior.
+
+- Anthropic prompt engineering guide (clear instructions, system prompts, examples, XML-style delimiters): https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview
+- Anthropic guidance on using XML tags to structure prompts: https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags
+- OpenAI prompt engineering guide (comparison point; few-shot, roles, output formats): https://platform.openai.com/docs/guides/prompt-engineering
+- Prompt injection (why user-supplied text must not be treated as instructions) - OWASP Top 10 for LLM Applications: https://owasp.org/www-project-top-10-for-large-language-model-applications/
+
 Prof. Happy (SUTA Labs)

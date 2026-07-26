@@ -50,7 +50,7 @@ train accuracy: 0.99
 test  accuracy: 0.71
 ```
 
-Near-perfect on training (0.99), much worse on the test set (0.71). That 28-point gap is textbook overfitting. Limit the tree depth (`max_depth=4`) or switch to a random forest and the gap shrinks.
+Near-perfect on training (0.99), much worse on the test set (0.71). That gap of roughly 28 points is textbook overfitting. By default `DecisionTreeClassifier` has no `max_depth` limit, so it grows until leaves are pure - which is exactly what lets it memorize (see: scikit-learn DecisionTreeClassifier API). Limit the tree depth (`max_depth=4`) or switch to a random forest and the gap shrinks.
 
 ---
 
@@ -82,7 +82,7 @@ One class vastly outnumbers the other (fraud is 1% of transactions, defects are 
 
 - **Cause:** the rare class is genuinely rare, so the model sees too few examples of it.
 - **How to detect:** high accuracy but terrible recall on the rare class. Always check the confusion matrix (Concepts 4.5), not just accuracy.
-- **How to fix:** use precision/recall/F1 instead of accuracy; oversample the minority (e.g. SMOTE) or undersample the majority; set `class_weight="balanced"` so mistakes on the rare class cost more; adjust the decision threshold.
+- **How to fix:** use precision/recall/F1 instead of accuracy; oversample the minority (e.g. SMOTE, from the separate imbalanced-learn library) or undersample the majority; set `class_weight="balanced"` (supported by many sklearn estimators, e.g. LogisticRegression, RandomForestClassifier, SVC) so mistakes on the rare class cost more; adjust the decision threshold (see: scikit-learn User Guide).
 
 ---
 
@@ -175,3 +175,15 @@ The data the model was trained on does not match the data it sees in production.
 - Correlation is not causation; predict on it, but do not blindly act on it.
 - Bad labels cap your accuracy; fix the answer key.
 - Proxy variables can smuggle in bias; audit outcomes across groups, not just inputs.
+
+---
+
+## References
+
+- scikit-learn User Guide, Underfitting vs. overfitting: https://scikit-learn.org/stable/auto_examples/model_selection/plot_underfitting_overfitting.html
+- scikit-learn User Guide, Validation curves and bias-variance: https://scikit-learn.org/stable/modules/learning_curve.html
+- scikit-learn API, `DecisionTreeClassifier` (default `max_depth=None`, grows until leaves are pure): https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+- scikit-learn User Guide, Cross-validation (detecting overfitting): https://scikit-learn.org/stable/modules/cross_validation.html
+- scikit-learn User Guide, Common pitfalls / data leakage: https://scikit-learn.org/stable/common_pitfalls.html
+- scikit-learn API, `class_weight` on `LogisticRegression` (`class_weight="balanced"`): https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+- imbalanced-learn documentation (SMOTE and resampling, external library): https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html

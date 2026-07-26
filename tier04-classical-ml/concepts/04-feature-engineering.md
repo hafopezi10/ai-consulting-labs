@@ -51,7 +51,7 @@ Notice how the raw gap between 250k and 1M (750,000) shrinks to about 1.4 in log
 
 Models need numbers, but many columns are categories (country, product_type, status). You have to encode them, and how you do it matters.
 
-- **One-hot encoding:** make one 0/1 column per category. `color` with values red/green/blue becomes three columns `color_red`, `color_green`, `color_blue`. Safe default for categories with NO natural order.
+- **One-hot encoding:** make one 0/1 column per category. `color` with values red/green/blue becomes three columns `color_red`, `color_green`, `color_blue`. Safe default for categories with NO natural order. In a real pipeline prefer sklearn's `OneHotEncoder` (from `sklearn.preprocessing`) over pandas `get_dummies`, because the encoder remembers the categories seen at fit time and reapplies them to new data, and its `handle_unknown="ignore"` option copes with categories that only show up in production (see: scikit-learn OneHotEncoder API). `get_dummies` is fine for the quick example below.
 - **Ordinal encoding:** map ordered categories to numbers - `small=0, medium=1, large=2`. Only use when the order is real, because the model will treat the numbers as distances.
 - **Target encoding:** replace each category with the average target value for that category (e.g. average churn rate per country). Powerful for high-cardinality columns, but dangerous - it can leak the answer if you compute it on the whole dataset instead of just the training folds.
 
@@ -63,8 +63,8 @@ Models need numbers, but many columns are categories (country, product_type, sta
 
 Many algorithms compare distances or sum weighted features. If one column runs 0-1 and another runs 0-1,000,000, the big one silently dominates. Scaling puts columns on comparable ranges.
 
-- **StandardScaler:** rescales each column to mean 0 and standard deviation 1. The common default.
-- **MinMaxScaler:** squeezes each column into a fixed range, usually 0 to 1. Good when you need bounded values.
+- **StandardScaler:** rescales each column to mean 0 and standard deviation 1 by subtracting the column mean and dividing by the column standard deviation - `z = (x - mean) / std` (see: scikit-learn StandardScaler API). The common default. It fits the mean and std on the training data (`with_mean=True`, `with_std=True` by default), then applies the same shift and scale to new data.
+- **MinMaxScaler:** squeezes each column into a fixed range, `feature_range=(0, 1)` by default. Good when you need bounded values.
 
 **When scaling matters:**
 
@@ -210,3 +210,16 @@ If a model scores suspiciously well (99% on a hard problem), suspect leakage bef
 - Turn text into TF-IDF or bag-of-words vectors.
 - Fewer, cleaner features often beat a pile of noisy ones.
 - Prevent leakage: fit transforms on train only, split by time when predicting the future. A too-good score usually means leakage.
+
+---
+
+## References
+
+- scikit-learn User Guide, Preprocessing data (scaling, encoding, transforms): https://scikit-learn.org/stable/modules/preprocessing.html
+- scikit-learn API, `StandardScaler` (`z = (x - mean) / std`; `with_mean=True`, `with_std=True`): https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html
+- scikit-learn API, `MinMaxScaler` (default `feature_range=(0, 1)`): https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html
+- scikit-learn API, `OneHotEncoder` (`handle_unknown`, remembers fit-time categories): https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+- scikit-learn API, `SimpleImputer` (strategies: mean, median, most_frequent, constant): https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html
+- scikit-learn User Guide, Text feature extraction (bag of words, TF-IDF): https://scikit-learn.org/stable/modules/feature_extraction.html#text-feature-extraction
+- scikit-learn User Guide, Common pitfalls / data leakage: https://scikit-learn.org/stable/common_pitfalls.html
+- pandas API, `get_dummies`: https://pandas.pydata.org/docs/reference/api/pandas.get_dummies.html

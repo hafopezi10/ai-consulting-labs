@@ -55,7 +55,7 @@ Techniques:
 
 - **Fixed-size** - split every N characters/tokens. Simple, but cuts sentences in half.
 - **Sentence/paragraph-aware** - split on natural boundaries so chunks are whole thoughts. Better.
-- **Overlap** - let consecutive chunks share the last/first sentence or so, so a fact that straddles a boundary is not lost from both chunks. A common default is a few hundred tokens per chunk with ~10-15% overlap.
+- **Overlap** - let consecutive chunks share the last/first sentence or so, so a fact that straddles a boundary is not lost from both chunks. A common starting point is a few hundred tokens per chunk with roughly 10-20% overlap, but treat this as a tunable default, not a law - the right chunk size depends on your documents and your embedding model, and you should measure it with the retrieval metrics in [05-rag-evaluation.md](05-rag-evaluation.md) rather than trusting a fixed number.
 
 Bad chunking is a real, common failure - the retriever returns technically-nearby but useless fragments. Your SURVIVE `bad-chunking` scenario injects a broken chunker (chunks too small / split mid-sentence); you diagnose it by looking at what gets retrieved, then re-chunk sensibly and confirm retrieval improves.
 
@@ -79,3 +79,13 @@ Enterprise-specific concerns that separate a demo from a deployable system:
 The through-line: **metadata created at ingestion time is what powers filtering, access control, citation, versioning, and dedup at query time.** Skimp on metadata during ingestion and you cannot enforce security or cite sources later. Capture it up front.
 
 Next: [05-rag-evaluation.md](05-rag-evaluation.md).
+
+---
+
+## References
+
+Authoritative sources for the ingestion concepts in this document. Tooling and defaults change - verify current options before recommending them to a client.
+
+- Chunking strategies and overlap (LangChain text splitters, a widely used reference implementation): https://python.langchain.com/docs/concepts/text_splitters/
+- LlamaIndex on document loading, parsing, and node/chunk construction: https://docs.llamaindex.ai/en/stable/module_guides/loading/
+- Embedding-model overlap/chunk-size guidance (sentence-transformers): https://sbert.net/

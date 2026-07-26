@@ -108,7 +108,7 @@ Expected output:
 train: (120, 5) val: (40, 5) test: (40, 5)
 ```
 
-200 rows became 120 train, 40 validation, 40 test. Because we set `random_state=42`, you get the exact same split every time you run it. That reproducibility is not optional in ML; without it you cannot compare two experiments fairly.
+200 rows became 120 train, 40 validation, 40 test. Because we set `random_state=42`, you get the exact same split every time you run it. That reproducibility is not optional in ML; without it you cannot compare two experiments fairly. Note that `train_test_split` shuffles the rows before splitting by default (`shuffle=True`), which is why time-ordered data needs special care - see step 5 above (see: scikit-learn train_test_split API).
 
 ---
 
@@ -189,3 +189,10 @@ Steps 6-8 are a tight loop you repeat many times. Steps 1-5 decide whether that 
 - `random_state=42` makes experiments reproducible so you can compare them honestly.
 - Start with a simple baseline model, then iterate.
 - Deploy is not the finish line; monitoring and retraining never stop.
+
+---
+
+## References
+
+- scikit-learn User Guide, Cross-validation and data splitting: https://scikit-learn.org/stable/modules/cross_validation.html
+- scikit-learn API, `train_test_split` (default `test_size` complements `train_size`, both `None` -> test is 0.25; `shuffle=True` by default): https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html

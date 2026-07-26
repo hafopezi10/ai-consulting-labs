@@ -106,14 +106,14 @@ Reading the confusion matrix: TN=6, FP=1 (top row), FN=1, TP=4 (bottom row). For
 
 ## 6. ROC curve and AUC
 
-Most classifiers output a probability (0 to 1), not just yes/no. The ROC curve shows how the model trades off catching positives (recall) against raising false alarms as you slide the decision threshold from strict to loose.
+Most classifiers output a probability (0 to 1), not just yes/no. The ROC curve plots the true positive rate (TPR = recall = TP/(TP+FN)) against the false positive rate (FPR = FP/(FP+TN)) as you slide the decision threshold from strict to loose (see: scikit-learn Model Evaluation User Guide). In plain terms, it shows how the model trades off catching positives against raising false alarms.
 
 - **AUC** (Area Under the ROC Curve) squeezes that whole curve into one number from 0 to 1:
   - 1.0 = perfect separation.
   - 0.5 = no better than a coin flip.
   - below 0.5 = worse than random (something is backwards).
 - **Why it is useful:** AUC measures the model's ranking ability independent of any single threshold, and it holds up better than accuracy on imbalanced data.
-- **Rough reading:** 0.9+ excellent, 0.8-0.9 good, 0.7-0.8 fair, below 0.7 weak.
+- **Rough reading:** a common rule-of-thumb (not an official sklearn standard) is 0.9+ excellent, 0.8-0.9 good, 0.7-0.8 fair, below 0.7 weak. What counts as "good enough" is always relative to your baseline and the problem.
 
 ---
 
@@ -135,7 +135,7 @@ When the model predicts a number (not a category), accuracy makes no sense. You 
 - **MAE (Mean Absolute Error):** the average size of the error, in the same units as the target. "On average we are off by $4,200." Easy to explain, forgiving of outliers.
 - **MSE (Mean Squared Error):** averages the SQUARED errors, so big misses are punished harder. Units are squared (dollars-squared), so it is less intuitive but useful for optimization.
 - **RMSE (Root Mean Squared Error):** the square root of MSE, back in the original units. Like MAE but heavier on large errors. If a few big misses are especially bad, watch RMSE.
-- **R2 (R-squared):** the fraction of the variation in the target the model explains, from 0 to 1 (can go negative for a truly bad model). 1.0 = perfect, 0 = no better than always guessing the average. "Our model explains 78% of the variance in price."
+- **R2 (R-squared):** the coefficient of determination, `1 - SS_residual / SS_total`, where SS_total is measured against always predicting the mean. Best possible value is 1.0; 0 means no better than always guessing the average; it can go negative for a model worse than that baseline (see: scikit-learn r2_score API). "Our model explains 78% of the variance in price."
 
 MAE vs RMSE: if RMSE is much larger than MAE, you have a few large errors dragging things - investigate those outliers.
 
@@ -155,6 +155,10 @@ y_pred = np.array([110, 140, 210, 245, 280])
 mae  = mean_absolute_error(y_true, y_pred)
 mse  = mean_squared_error(y_true, y_pred)
 rmse = np.sqrt(mse)
+# In scikit-learn 1.4+ you can compute RMSE directly:
+#   from sklearn.metrics import root_mean_squared_error
+#   rmse = root_mean_squared_error(y_true, y_pred)
+# (the old mean_squared_error(..., squared=False) form is deprecated)
 r2   = r2_score(y_true, y_pred)
 
 print("MAE :", round(mae, 2))
@@ -197,3 +201,15 @@ The headline metric tells you IF the model is off; residuals tell you WHERE and 
 - The 0.5 threshold is a dial - move it to favor precision or recall without retraining.
 - For regression use MAE, RMSE, and R2; if RMSE >> MAE you have big outlier errors.
 - Plot residuals to find WHERE the model is wrong, not just how wrong.
+
+---
+
+## References
+
+- scikit-learn User Guide, Metrics and scoring (precision, recall, F1, ROC/AUC, TPR/FPR formulas): https://scikit-learn.org/stable/modules/model_evaluation.html
+- scikit-learn API, `confusion_matrix`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
+- scikit-learn API, `classification_report`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
+- scikit-learn API, `roc_auc_score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html
+- scikit-learn API, `mean_absolute_error`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_absolute_error.html
+- scikit-learn API, `root_mean_squared_error` (added in 1.4; the `squared=False` arg of `mean_squared_error` is deprecated): https://scikit-learn.org/stable/modules/generated/sklearn.metrics.root_mean_squared_error.html
+- scikit-learn API, `r2_score` (coefficient of determination; best 1.0, can be negative): https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html

@@ -102,4 +102,17 @@ The abstraction has a happy side effect used throughout these labs: because the 
 - Providers differ in prompting quirks, refusals, structured-output guarantees, and tool-calling shapes; portability is never free.
 - Design against lock-in: env-var credentials, a thin provider abstraction, a portable prompt library, a keyless mock provider, and a written exit strategy.
 
+---
+
+## References
+
+Authoritative sources for the provider landscape in this document. The model market moves fast - model IDs, prices, context windows, and even provider names change every few months, so treat any specific detail below as a snapshot and confirm the live numbers from the provider before putting them in a client proposal.
+
+- Anthropic / Claude models (families: Opus most capable, Sonnet balanced, Haiku fastest/cheapest; always use the exact current model ID from the docs): https://docs.anthropic.com/en/docs/about-claude/models
+- OpenAI models: https://platform.openai.com/docs/models
+- Google Gemini models: https://ai.google.dev/gemini-api/docs/models
+- Amazon Bedrock (multi-provider platform behind one AWS API): https://docs.aws.amazon.com/bedrock/
+- Microsoft Azure AI Foundry (multi-provider platform on Azure): https://learn.microsoft.com/en-us/azure/ai-foundry/
+- Open-weight model families (comparison point): Llama (https://www.llama.com/) and Mistral (https://docs.mistral.ai/)
+
 Prof. Happy (SUTA Labs)

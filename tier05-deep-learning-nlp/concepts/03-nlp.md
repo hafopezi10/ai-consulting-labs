@@ -71,7 +71,7 @@ Real tokenizers are smarter than `split()` (they handle contractions, French acc
 Words have forms: "run", "runs", "running", "ran". To a bag-of-words model these look like four different words unless you collapse them.
 
 - **Stemming** chops word endings with crude rules: "running" -> "run", "invoices" -> "invoic". Fast, but the result is not always a real word.
-- **Lemmatization** maps a word to its dictionary base form using real language knowledge: "ran" -> "run", "better" -> "good". More accurate, a bit slower.
+- **Lemmatization** maps a word to its dictionary base form using real language knowledge: "ran" -> "run", "better" -> "good". More accurate, a bit slower. (The "better" -> "good" case only works when the lemmatizer is told the word is an adjective - lemmatizers use part-of-speech information, and without it "better" is often left unchanged.)
 
 Both shrink your vocabulary so related forms share one feature. For a bilingual classifier you would apply the right-language rules per document. Our BUILD keeps it simple and skips aggressive stemming, but you should know the terms.
 
@@ -169,5 +169,18 @@ The BUILD deliberately uses order-free TF-IDF because it is CPU-friendly, fast, 
 - Text classification, sentiment analysis, and NER all reuse the same core; only the labels or the output step change.
 - Topic modeling is unsupervised structure-finding; classification needs labels.
 - Bag of words ignores order; sequence models and transformers keep it - reach for those (and a GPU) when meaning depends on order.
+
+---
+
+## References
+
+Authoritative sources used to fact-check the concepts in this document.
+
+- TF-IDF, bag of words, and stop words - scikit-learn text feature extraction (`TfidfVectorizer`, `CountVectorizer`): https://scikit-learn.org/stable/modules/feature_extraction.html
+- Stemming vs lemmatization: https://www.ibm.com/think/topics/stemming-lemmatization
+- Named Entity Recognition entity classes (person, organization, location, date, money, etc.) - Stanford NER: https://nlp.stanford.edu/software/CRF-NER.html
+- Topic modeling / Latent Dirichlet Allocation (LDA): https://www.jmlr.org/papers/v3/blei03a.html
+- RNN / LSTM / GRU vs transformers (sequence models and long-range dependencies): https://huggingface.co/docs/transformers/en/model_summary
+- Subword tokenization used by modern transformers: https://huggingface.co/docs/transformers/en/tokenizer_summary
 
 Prof. Happy (SUTA Labs)

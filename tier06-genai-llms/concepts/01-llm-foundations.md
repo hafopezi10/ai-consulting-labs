@@ -82,7 +82,9 @@ Two dials control sampling. (Note: some newer models remove these dials and stee
 **Temperature.** Controls randomness.
 
 - **Low temperature (near 0):** the model almost always picks the single most likely token. Output is focused, repeatable, and "safe". Good for extraction, classification, factual answers, code.
-- **High temperature (near 1 or above):** the model is more willing to pick less-likely tokens. Output is more varied and creative, but also more prone to going off the rails. Good for brainstorming, creative writing, generating variety.
+- **High temperature (near the top of the allowed range):** the model is more willing to pick less-likely tokens. Output is more varied and creative, but also more prone to going off the rails. Good for brainstorming, creative writing, generating variety.
+
+Note the allowed range depends on the provider. On the Anthropic API, `temperature` accepts `0.0` to `1.0` (a request outside that range is rejected). Other providers use different ranges (OpenAI, for example, allows `0` to `2`), so "high" is relative to the model you are calling - always check that provider's docs (see: docs.anthropic.com API reference; platform.openai.com/docs).
 
 The mental image: temperature is how adventurous the model is allowed to be when choosing its next word.
 
@@ -144,5 +146,16 @@ The honest consultant framing: an LLM is a brilliant, fast, tireless generalist 
 - Temperature and top-p control variety; keep them low for factual work, and change one at a time.
 - Structured output turns the model from a chat toy into a reliable component.
 - Hallucinations are confident falsehoods; reduce them with grounding, permission to say "I do not know", low temperature, citations, and human review.
+
+---
+
+## References
+
+Authoritative sources for the concepts in this document. Model IDs, context-window sizes, and prices change frequently - always confirm the live numbers from the provider's docs before quoting them to a client, and never treat a specific price as an eternal fact.
+
+- Anthropic / Claude docs (tokens, context windows, temperature range 0.0-1.0, sampling, stateless API): https://docs.anthropic.com/
+- OpenAI API docs (comparison point for temperature range and sampling): https://platform.openai.com/docs/
+- Token rule of thumb (~4 characters / ~0.75 words per token, English, approximate; use the model's own tokenizer for real counts): https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them
+- RLHF / preference tuning (training stages): "Training language models to follow instructions with human feedback" (Ouyang et al., InstructGPT): https://arxiv.org/abs/2203.02155
 
 Prof. Happy (SUTA Labs)

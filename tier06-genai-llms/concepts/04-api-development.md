@@ -192,4 +192,19 @@ Fallback is the payoff of everything else in this document: env-var keys, a clea
 - Cut cost with prompt caching (shared prefixes) and batch processing (non-urgent work); estimate cost as tokens x price x calls, assumptions written down.
 - Add model fallback so one provider's failure does not take the feature down - the payoff of a clean provider abstraction.
 
+---
+
+## References
+
+Authoritative sources used to fact-check the API mechanics in this document. Prices, discounts, and feature availability change - confirm current values from the provider docs before quoting them to a client.
+
+- Anthropic Messages API (request/response shape, `max_tokens`, streaming, tool use): https://docs.anthropic.com/en/api/messages
+- HTTP error codes and retry guidance (429 rate limit and 5xx/529 overloaded are retryable; 400/401/403 are not; honor `retry-after`): https://docs.anthropic.com/en/api/errors
+- Tool / function calling (the model requests a call; your code runs it): https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview and https://platform.openai.com/docs/guides/function-calling
+- Structured outputs / JSON schema enforcement: https://docs.anthropic.com/en/docs/build-with-claude/structured-outputs and https://platform.openai.com/docs/guides/structured-outputs
+- Token counting (use the model's own tokenizer, not a generic estimate): https://docs.anthropic.com/en/docs/build-with-claude/token-counting
+- Prompt caching (prefix match; cached reads cost a small fraction of normal input tokens; writes cost a little extra): https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+- Batch processing (asynchronous; roughly 50% cost discount): https://docs.anthropic.com/en/docs/build-with-claude/batch-processing
+- Exponential backoff with jitter (the "thundering herd" fix): https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
+
 Prof. Happy (SUTA Labs)

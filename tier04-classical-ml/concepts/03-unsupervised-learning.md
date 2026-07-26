@@ -45,7 +45,7 @@ The most common clustering method. You tell it K (how many clusters you want). I
 - **Intuition:** drop K flags on the map, assign each house to its nearest flag, move each flag to the middle of its houses, repeat.
 - **When to use:** you want round, roughly equal-sized groups and you have a sense of how many. Fast and scalable.
 - **Strengths:** simple, fast, works on large data.
-- **Weaknesses:** you must pick K yourself, it assumes blobby round clusters, and it is sensitive to scale and to outliers. Different random starts can give different answers (so set `random_state`).
+- **Weaknesses:** you must pick K yourself, and its objective (inertia) assumes clusters are convex and isotropic - roughly round blobs of similar size. It responds poorly to elongated or irregularly shaped clusters, and it is sensitive to scale and to outliers (see: scikit-learn Clustering User Guide). Different random starts can give different answers (so set `random_state`).
 
 Tiny example. On your **lab server**, as **ec2-user**:
 
@@ -57,6 +57,9 @@ import numpy as np
 # 300 points that naturally form 3 blobs
 X, _ = make_blobs(n_samples=300, centers=3, random_state=42)
 
+# n_init=10 runs the algorithm 10 times and keeps the best. In current
+# sklearn the default is n_init="auto" (10 runs with random init, 1 with
+# the default k-means++); we set it explicitly for a stable result.
 km = KMeans(n_clusters=3, random_state=42, n_init=10)
 labels = km.fit_predict(X)
 
@@ -77,7 +80,7 @@ We generated 3 blobs of 100 points each, and k-means recovered 3 clusters of rou
 
 ## 4. Picking K - the elbow method
 
-Since you choose K yourself, how do you pick a good one? A common trick is the elbow method: run k-means for K = 1, 2, 3, ... and plot how tightly packed the clusters are (a value called inertia). Inertia always drops as K rises, but at some point the drop flattens out. That bend, the "elbow," is a reasonable K.
+Since you choose K yourself, how do you pick a good one? A common trick is the elbow method: run k-means for K = 1, 2, 3, ... and plot how tightly packed the clusters are. That tightness is inertia - the sum of squared distances of each point to its assigned cluster center, which sklearn exposes as the `inertia_` attribute (also called the within-cluster sum of squares) (see: scikit-learn KMeans API). Inertia always drops as K rises, but at some point the drop flattens out. That bend, the "elbow," is a reasonable K.
 
 - **Intuition:** more clusters always fit tighter, but past a point you are just splitting hairs. The elbow is where extra clusters stop paying off.
 
@@ -101,7 +104,7 @@ Principal Component Analysis (PCA) takes data with many columns and squeezes it 
 - **Intuition:** photographing a 3D object. You lose a dimension but keep a recognizable picture if you pick a good angle. PCA picks the most informative angles.
 - **When to use:** too many features (slow models, noise, hard to visualize), or you want to plot high-dimensional data in 2D.
 - **Strengths:** cuts columns, removes redundancy, speeds up other models, enables 2D/3D visualization.
-- **Weaknesses:** the new columns ("components") are combinations of originals, so they are hard to interpret. And you always lose SOME information. PCA needs scaled data first.
+- **Weaknesses:** the new columns ("components") are combinations of originals, so they are hard to interpret. And you always lose SOME information. sklearn's PCA centers each feature (subtracts the mean) automatically but does NOT scale, so when your columns are on different scales you should standardize them first with `StandardScaler`, or a large-scale column will dominate the components (see: scikit-learn Decomposition User Guide).
 
 Small example showing how much information each component keeps. On your **lab server**, as **ec2-user**:
 
@@ -174,3 +177,13 @@ And a reminder that applies to nearly all of them: SCALE your features first (Co
 - Association rules find items that go together; judge them with support, confidence, and lift.
 - Scale your features first - distance-based methods depend on it.
 - There is no "accuracy" here; you judge results by whether they are useful and make sense.
+
+---
+
+## References
+
+- scikit-learn User Guide, Clustering (K-means assumptions, inertia, hierarchical linkage): https://scikit-learn.org/stable/modules/clustering.html
+- scikit-learn API, `KMeans` (default `n_clusters=8`, `init="k-means++"`, `n_init="auto"` as of 1.4; `inertia_` = within-cluster sum of squares): https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+- scikit-learn User Guide, Decomposition / PCA (centers but does not scale; `explained_variance_ratio_`): https://scikit-learn.org/stable/modules/decomposition.html
+- scikit-learn API, `PCA`: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+- scikit-learn User Guide, Outlier and novelty detection (Isolation Forest): https://scikit-learn.org/stable/modules/outlier_detection.html

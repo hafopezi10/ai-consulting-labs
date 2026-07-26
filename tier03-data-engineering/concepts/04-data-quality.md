@@ -104,16 +104,18 @@ print(df["state_clean"].value_counts())
 Expected output:
 
 ```
+state
 NY            1
 New York      1
 new york      1
 N.Y.          1
 CA            1
 California    1
-Name: state, dtype: int64
+Name: count, dtype: int64
+state_clean
 New York    4
 CA          2
-Name: state_clean, dtype: int64
+Name: count, dtype: int64
 ```
 
 Inconsistency inflates your category count, breaks joins, and makes group-bys wrong. A model treats "NY" and "New York" as two unrelated things. Standardizing to one canonical form per value is a core cleaning step.
@@ -136,7 +138,7 @@ Expected output:
 ```
 min      5.0
 max    570.0
-dtype: float64
+Name: updated, dtype: float64
 ```
 
 A max of 570 days means some rows are over a year and a half old. If a model needs current data, that is stale and dangerous.
@@ -171,9 +173,10 @@ Expected output:
 
 ```
 Duplicate rows: 3
+order_id
 3    3
 2    2
-Name: order_id, dtype: int64
+Name: count, dtype: int64
 ```
 
 Duplicates double-count revenue and over-weight examples in training. `duplicated()` flags every copy after the first; `drop_duplicates()` removes them.
@@ -269,3 +272,18 @@ The root cause is not "duplicates" - it is "no idempotency key on inserts." The 
 - The most senior move in data work is prevention: contracts and observability that stop bad data at the door, so nobody spends a weekend on RCA in the first place.
 
 Data quality is unglamorous and it is the whole game. The best AI consultants are, underneath, exceptional data-quality engineers.
+
+---
+
+## References
+
+- pandas missing data (`isna`, `dropna`, `fillna`) - https://pandas.pydata.org/docs/user_guide/missing_data.html
+- pandas duplicate handling (`duplicated`, `drop_duplicates`) - https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html
+- pandas `Series.str.match` (regex validity checks) - https://pandas.pydata.org/docs/reference/api/pandas.Series.str.match.html
+- Great Expectations (data validation framework) - https://docs.greatexpectations.io/
+- The five pillars of data observability (freshness, volume, schema, distribution, lineage), Monte Carlo - https://www.montecarlodata.com/blog-what-is-data-observability/
+- Five whys root-cause technique - https://en.wikipedia.org/wiki/Five_whys
+
+Note on the six dimensions: "completeness, accuracy, consistency, timeliness, validity, uniqueness" is a widely used framework (it aligns with the dimensions defined by DAMA-DMBOK); different sources add or split a dimension or two, so treat the list as a practical checklist rather than a single fixed standard.
+
+Outputs in this doc were produced on pandas 2.3.x. Reminder: `value_counts()` returns a Series named `count` in current pandas and prints its index name on its own line above the values.

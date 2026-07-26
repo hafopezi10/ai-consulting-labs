@@ -207,6 +207,8 @@ Two rules that trip people up:
 - Save the `state_dict`, not the whole model object - it is portable and safe.
 - To load, you must first create a model with the exact same architecture, then pour the weights in.
 
+One current-version note: as of **PyTorch 2.6**, `torch.load` defaults to `weights_only=True` (a security change - it refuses to unpickle arbitrary Python objects; see: pytorch.org/docs `torch.load`). A plain `state_dict` of tensors loads fine under this default, which is another reason to save the `state_dict` rather than the whole model object - loading a full pickled model can now raise an error unless you explicitly opt out. Stick to `state_dict` and you avoid the problem entirely.
+
 The BUILD saves the trained classifier this way so USE and SURVIVE can reuse it without retraining.
 
 ---
@@ -236,5 +238,20 @@ Where a real project needs a GPU: training a large network on millions of rows, 
 - Use `model.train()` while training and `model.eval()` + `torch.no_grad()` while predicting (dropout must be off).
 - Save/load with `state_dict`; rebuild the same architecture before loading.
 - CPU is enough for tiny models here; a real project moves to a GPU with `.to("cuda")` when scale demands it.
+
+---
+
+## References
+
+Authoritative sources used to fact-check this document, all from the official PyTorch docs. APIs evolve between versions - confirm against the docs for your installed PyTorch version.
+
+- Tensors (creation, shape, math): https://docs.pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html
+- Autograd (`requires_grad`, `.backward()`, `.grad`): https://docs.pytorch.org/tutorials/beginner/basics/autogradqs_tutorial.html
+- Building models (`nn.Module`, `nn.Linear`, `nn.ReLU`): https://docs.pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html
+- `nn.CrossEntropyLoss` (expects raw logits; applies log-softmax internally): https://docs.pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
+- `torch.optim.Adam`: https://docs.pytorch.org/docs/stable/generated/torch.optim.Adam.html
+- Optimization loop (gradients accumulate; `zero_grad` each step): https://docs.pytorch.org/tutorials/beginner/basics/optimization_tutorial.html
+- Datasets and DataLoaders: https://docs.pytorch.org/docs/stable/data.html
+- `torch.load` `weights_only` default (PyTorch 2.6 change): https://docs.pytorch.org/docs/stable/generated/torch.load.html and https://pytorch.org/blog/pytorch2-6/
 
 Prof. Happy (SUTA Labs)

@@ -88,7 +88,7 @@ Expected output:
 32
 ```
 
-The dot product is the workhorse of AI. It measures how much two vectors "agree". A large positive dot product means the vectors point the same way. Near zero means unrelated. Negative means opposite. Every neuron in a neural network computes a dot product of its inputs and its weights.
+The dot product is the workhorse of AI. It measures how much two vectors "agree". A large positive dot product means the vectors point the same way. A dot product of zero means the vectors are perpendicular (orthogonal), which we read as unrelated. Negative means they point in opposing directions (see: MathWorld Dot Product). Formally `a . b = |a| |b| cos(theta)`, where theta is the angle between them - that identity is what the next two sections build on. Every neuron in a neural network computes a dot product of its inputs and its weights.
 
 ---
 
@@ -120,7 +120,7 @@ You transpose constantly to line up shapes so matrices can be multiplied.
 
 This is the operation that runs neural networks. To multiply matrix `A` by matrix `B`, the number of **columns in A** must equal the number of **rows in B**. Each entry of the result is a dot product of a row of A with a column of B.
 
-Rule of thumb for shapes: `(m, n) x (n, p) = (m, p)`. The inner numbers must match; the outer numbers become the result shape.
+Rule of thumb for shapes: `(m, n) x (n, p) = (m, p)`. The inner numbers must match; the outer numbers become the result shape (see: MathWorld Matrix Multiplication). Note matrix multiplication is not commutative: `A @ B` is generally not equal to `B @ A`.
 
 ```python
 A = np.array([[1, 2],
@@ -159,7 +159,7 @@ Expected output:
 
 ```
 
-NumPy has a shortcut, `np.linalg.norm(a - b)`, that does the same thing. Distance answers "how different are these two embeddings?" - the basis of nearest-neighbor search and clustering.
+NumPy has a shortcut, `np.linalg.norm(a - b)`, that does the same thing: by default `np.linalg.norm` computes the L2 (Euclidean) norm (see: numpy.linalg.norm docs). Distance answers "how different are these two embeddings?" - the basis of nearest-neighbor search and clustering.
 
 ---
 
@@ -192,7 +192,7 @@ Expected output:
 
 ## 8. Eigenvalue intuition (no heavy math)
 
-Every matrix, when applied to a vector, stretches and rotates it. For a special few vectors, the matrix does not rotate them at all - it only stretches or shrinks them. Those special vectors are **eigenvectors**, and the amount of stretch is the **eigenvalue**.
+Every (square) matrix, when applied to a vector, generally stretches and rotates it. For a special few vectors, the matrix does not change their direction line at all - it only scales them (a negative eigenvalue also flips them to point the opposite way along that same line). Those special vectors are **eigenvectors**, and the scaling factor is the **eigenvalue**: `A v = lambda v` (see: MathWorld Eigenvector).
 
 Why you care: eigenvalues tell you the "main directions" and "strengths" hidden in data. **PCA** (Principal Component Analysis), the classic tool for shrinking high-dimensional data down to a few important directions, is built on eigenvectors. You do not need to compute them by hand. Just know: big eigenvalue = important direction, small eigenvalue = direction you can probably drop.
 
@@ -236,3 +236,16 @@ A neural network's "hidden size" is a dimension count. When you read that a mode
 - Dimensionality: more captures more meaning, but too much gets sparse and expensive.
 
 Next: **Concepts 2.3 - Probability**, where we start reasoning about uncertainty, the thing every model output really is.
+
+---
+
+## References
+
+- MathWorld, Dot Product (a . b = |a||b|cos theta; zero = orthogonal): https://mathworld.wolfram.com/DotProduct.html
+- MathWorld, Matrix Multiplication (inner-dimension rule): https://mathworld.wolfram.com/MatrixMultiplication.html
+- MathWorld, Eigenvector and Eigenvalue (A v = lambda v): https://mathworld.wolfram.com/Eigenvector.html
+- numpy.matmul / the @ operator: https://numpy.org/doc/stable/reference/generated/numpy.matmul.html
+- numpy.dot: https://numpy.org/doc/stable/reference/generated/numpy.dot.html
+- numpy.linalg.norm (default L2 norm): https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
+- numpy.linalg.eig: https://numpy.org/doc/stable/reference/generated/numpy.linalg.eig.html
+- scikit-learn, PCA: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html

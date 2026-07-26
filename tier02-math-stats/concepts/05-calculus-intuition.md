@@ -39,13 +39,13 @@ The lowest value is 0, at `x = 0`. That is the bottom of the U.
 
 A **derivative** is the slope of a curve at a single point - how fast the output changes as you nudge the input. For a straight line the slope is the same everywhere. For a curve it changes: steep on the sides, flat at the bottom.
 
-The derivative of `f(x) = x**2` is `2*x`. You do not need to prove this. Just read what it says:
+The derivative of `f(x) = x**2` is `2*x` (this is the power rule: the derivative of `x**n` is `n*x**(n-1)` - see: MathWorld Power Rule). You do not need to prove this. Just read what it says:
 
 - At `x = 3`, slope is `6` - steep, going uphill to the right.
 - At `x = -3`, slope is `-6` - steep, going uphill to the left.
 - At `x = 0`, slope is `0` - flat, the bottom.
 
-You can estimate a derivative numerically by nudging the input a tiny bit and measuring the change (rise over run), which is exactly the slope formula from Concepts 2.1:
+You can estimate a derivative numerically by nudging the input a tiny bit and measuring the change (rise over run), which is exactly the slope formula from Concepts 2.1. This is the forward finite-difference approximation of the derivative (see: MathWorld Finite Difference):
 
 ```python
 def f(x):
@@ -65,7 +65,7 @@ Expected output (yours will differ slightly):
 0.0
 ```
 
-The slope at 3 is 6; at the bottom it is 0. **A slope of zero means you are at a flat spot - a minimum.** That is the signal training uses to know it has arrived.
+The slope at 3 is 6; at the bottom it is 0. **A slope of zero means you are at a flat spot.** For a simple bowl-shaped curve like `x**2` that flat spot is the minimum, and that is the signal training uses to know it has arrived. (Strictly, a zero slope marks any flat point - a minimum, a maximum, or a saddle - so in real high-dimensional models a zero gradient is a stationary point, most often a local minimum or saddle rather than the single global bottom. For our bowl there is only one, so it is the minimum - see: MathWorld Stationary Point.)
 
 ---
 
@@ -95,7 +95,7 @@ A **partial derivative** is the slope with respect to just one input, holding th
 
 1. Start at some guess for the model's parameters.
 2. Compute the gradient (the slopes) of the loss at that point.
-3. Take a small step in the downhill direction (opposite the gradient).
+3. Take a small step in the downhill direction (opposite the gradient). The update rule is `new_param = old_param - learning_rate * gradient` (see: scikit-learn SGD documentation).
 4. Repeat until the slope is near zero (the bottom).
 
 Here it is minimizing `f(x) = x**2`, starting from `x = 10`:
@@ -148,10 +148,10 @@ Expected output:
 
 ```
 lr=0.1: final x = 3.28
-lr=1.01: final x = -10.61
+lr=1.01: final x = -11.04
 ```
 
-With `lr=0.1` we move toward 0. With `lr=1.01` we overshoot and drift **away** from the answer - the first sign of divergence. Diagnosing and fixing a bad learning rate is a SURVIVE scenario in this tier.
+With `lr=0.1` we move toward 0. With `lr=1.01` we overshoot and drift **away** from the answer - the first sign of divergence. (Each step multiplies `x` by `1 - lr*2 = -1.02`, a factor whose size is above 1, so the value flips sign and grows every step instead of shrinking.) Diagnosing and fixing a bad learning rate is a SURVIVE scenario in this tier.
 
 ---
 
@@ -159,7 +159,7 @@ With `lr=0.1` we move toward 0. With `lr=1.01` we overshoot and drift **away** f
 
 A **loss function** measures how wrong the model is on the data: big when predictions are far from the truth, small when they are close. Training = using gradient descent to make the loss small. Two you will meet everywhere:
 
-- **Mean squared error (MSE):** for predicting numbers (regression). Average of the squared differences between prediction and truth. Squaring punishes big misses hard. You will use MSE in the line-fit BUILD lab.
+- **Mean squared error (MSE):** for predicting numbers (regression). Average of the squared differences between prediction and truth (see: scikit-learn mean_squared_error). Squaring punishes big misses hard. You will use MSE in the line-fit BUILD lab.
 - **Cross-entropy (log loss):** for predicting categories (classification). Uses the log (Concepts 2.1) so a confident wrong answer is penalized severely. This is the loss behind language models predicting the next word.
 
 ```python
@@ -190,3 +190,16 @@ The MSE of 0.5 summarizes "how wrong overall" in one number. Gradient descent nu
 - A loss function scores how wrong the model is (MSE for numbers, cross-entropy for categories); training minimizes it.
 
 You now have the full toolkit: algebra, linear algebra, probability, statistics, and calculus intuition. Next you put it to work in the BUILD, USE, and SURVIVE labs.
+
+---
+
+## References
+
+- MathWorld, Derivative: https://mathworld.wolfram.com/Derivative.html
+- MathWorld, Power Rule (derivative of x^n): https://mathworld.wolfram.com/PowerRule.html
+- MathWorld, Finite Difference (numerical derivative): https://mathworld.wolfram.com/FiniteDifference.html
+- MathWorld, Stationary Point (zero-slope points): https://mathworld.wolfram.com/StationaryPoint.html
+- MathWorld, Gradient: https://mathworld.wolfram.com/Gradient.html
+- scikit-learn, Stochastic Gradient Descent (update rule): https://scikit-learn.org/stable/modules/sgd.html
+- scikit-learn, mean_squared_error: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
+- scikit-learn, log_loss (cross-entropy): https://scikit-learn.org/stable/modules/generated/sklearn.metrics.log_loss.html
